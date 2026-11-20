@@ -15,3 +15,10 @@ nem com o IdleBoard, nem com o PokeGrid.
 
 A interface (layout, ícones, temas, textos) é própria. Os nomes e links dos jogos no catálogo de sugestões
 pertencem aos respectivos donos, e cada jogo tem as próprias regras sobre o uso de várias contas.
+
+## Logos dos jogos
+
+Os logos em `src/renderer/assets/games/` são **marcas registradas ou obras dos respectivos jogos** e **não estão
+cobertos pela licença MIT** deste repositório. Eles estão ali só para identificar cada jogo no hub, como num
+launcher, sem sugerir afiliação ou endosso. Foram reduzidos (WebP, até 480×270) e não foram alterados de outra forma.
+Se você é dono de um desses jogos e prefere que o logo seja removido, abra uma issue.

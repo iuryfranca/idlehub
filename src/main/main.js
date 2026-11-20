@@ -9,6 +9,7 @@ const { installPanelPolicy, setPanelLanguage } = require('./panels');
 const { chromeLikeUserAgent } = require('./user-agent');
 const { createMonitor } = require('./monitor');
 const catalog = require('./catalog');
+const { fetchIcon } = require('./favicon');
 
 const IS_DEV = !app.isPackaged;
 const RENDERER = path.resolve(__dirname, '..', 'renderer');
@@ -92,6 +93,9 @@ expose('account:clearCache', async (accountId) => {
   await session.fromPartition(partitionOf(accountId)).clearCache();
   return true;
 });
+
+// Favicon do jogo, baixado pela sessao de uma conta dele (so links que o proprio site informou).
+expose('game:icon', (accountId, urls) => (existingAccount(accountId) ? fetchIcon(session.fromPartition(partitionOf(accountId)), urls) : null));
 
 expose('window:fullscreen', () => {
   mainWindow.setFullScreen(!mainWindow.isFullScreen());

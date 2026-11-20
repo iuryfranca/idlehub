@@ -15,11 +15,13 @@ O IdleHub **não coleta, não envia e não retém** nenhuma informação pessoal
 
 - **Sem servidor e sem conta.** O app não tem backend, cadastro, login próprio nem plano pago.
 - **Sem telemetria.** Não há analytics, rastreamento, relatório de erros enviado pela internet nem atualização automática.
-- **Nada é baixado da internet pelo app**: a fonte (Roboto Flex) e as cores vêm dentro dele, sem Google Fonts ou CDN.
-- **O app não faz requisições próprias.** As únicas conexões são as páginas dos jogos que *você* adiciona e abre.
-  Links externos só abrem no seu navegador quando você clica.
+- **Nada é baixado da internet para a interface**: a fonte (Roboto Flex), as cores e os logos do catálogo vêm dentro do app, sem Google Fonts ou CDN.
+- **As únicas conexões são os jogos que *você* adiciona e abre.** A única requisição feita pelo próprio app é o
+  **ícone do jogo** (favicon): quando um jogo carrega sem ícone, o app baixa o favicon que *aquele site* informa, do
+  mesmo site, pela sessão da própria conta, só por HTTPS e com limite de 256 KB. O ícone vira um PNG de 64×64 guardado
+  no `idlehub.json`, e nada é enviado a mais ninguém. Links externos só abrem no seu navegador quando você clica.
 - **Tudo fica no seu computador**, na pasta `%APPDATA%\idlehub`:
-  - `idlehub.json`: jogos, apelidos das contas e preferências;
+  - `idlehub.json`: jogos (com o ícone de cada um), apelidos das contas e preferências;
   - `Partitions\acc-*`: a sessão de cada conta (cookies e dados que o próprio jogo grava).
 - **Você controla esses dados.** "Remover conta" apaga a sessão daquela conta. Para apagar tudo, feche o app e apague a pasta `%APPDATA%\idlehub`.
 - **Os jogos são outra coisa.** Cada jogo é um site de terceiros, com a própria política de privacidade. O que você
@@ -27,7 +29,8 @@ O IdleHub **não coleta, não envia e não retém** nenhuma informação pessoal
   não copia e não repassa esses dados.
 
 **Como isso foi verificado (versão 0.1.0, 20/11/2026):**
-1. Revisão do código-fonte: não existe nenhuma chamada de rede no app (`fetch`, `net`, `XMLHttpRequest`, WebSocket, telemetria, `autoUpdater`, `crashReporter`).
+1. Revisão do código-fonte: não existe nenhuma chamada de rede no app (`net`, `XMLHttpRequest`, WebSocket, telemetria, `autoUpdater`, `crashReporter`).
+   O único `fetch` é o do ícone do jogo (`src/main/favicon.js`), descrito acima, que só pede ao site do próprio jogo.
 2. Teste com o log de rede completo do Chromium (`--log-net-log`), que registra toda conexão do processo, inclusive as do próprio Electron:
    - com o app vazio, nenhuma conexão saiu para a internet;
    - com jogos abertos, só os domínios desses jogos foram contatados.
@@ -51,7 +54,8 @@ npm start              # ou dois cliques em "Abrir IdleHub.bat"
 
 | Recurso | Como usar |
 |---|---|
-| Jogos e grupos | Lateral → **Adicionar jogo** (sugestões prontas ou qualquer link HTTPS) |
+| **Hub de jogos** | Lateral → **Adicionar jogo**: catálogo com o logo de cada jogo e uma barra de endereço, como num navegador. Digitar filtra o catálogo; colar ou digitar um link (`meujogo.com`) vira na hora um **jogo personalizado**, com nome sugerido e editável. Enter adiciona. Jogo já adicionado: o card só abre |
+| Ícone de cada jogo | Automático: o favicon do site aparece na lateral depois da primeira carga (ver Privacidade) |
 | Contas com sessão isolada | **Nova conta**; até 9 por jogo; remover apaga a sessão daquela conta |
 | Layout **Grade** | Todas as contas do mesmo tamanho; colunas escolhidas automaticamente |
 | Layout **Destaque** | Uma conta grande e as outras empilhadas; arraste a divisória; ★ escolhe a principal |
@@ -140,15 +144,17 @@ src/main/user-agent.js  User-Agent de Chrome comum (sem o token do Electron)
 src/main/store.js       estado + validação (tudo que vem da interface passa por normalize())
 src/main/monitor.js     coleta do Monitor (só com a tela aberta); monitor-core.js tem as contas puras e testadas
 src/main/perf-sampler.ps1  leitor dos contadores do Windows (GPU, disco, rede, processos) via API PDH
-src/main/catalog.js     sugestões de jogos
+src/main/catalog.js     catálogo do hub de jogos (nome, link e logo em src/renderer/assets/games/)
+src/main/favicon.js     download do ícone do jogo (só HTTPS, pela sessão da conta, com limite de tamanho e tempo)
 src/preload.js          ponte mínima (window.hub)
 src/renderer/           interface: index.html, styles.css, app.js, layout.js (cálculo puro), icons.js, i18n.js (traduções),
-                        monitor-ui.js (tela Monitor e gráficos), winproc-ui.js (processos do Windows)
+                        monitor-ui.js (tela Monitor e gráficos), winproc-ui.js (processos do Windows),
+                        game-hub.js + game-hub.css (hub de jogos), skeleton.js (padrão de carregamento)
 src/renderer/m3/        tokens do Material 3 (tokens.css), cores geradas (colors.css) e a fonte Roboto Flex
 scripts/build-theme.mjs gera colors.css a partir das cores base (npm run theme)
 scripts/capture-screens.js  refaz as capturas do site e do vídeo (npm run screens)
 webpage/                página de apresentação (site estático, sem scripts nem recursos externos)
-test/                   testes de store, layout, idioma, user-agent, contraste das cores e monitor (node --test)
+test/                   testes de store, layout, idioma, user-agent, contraste das cores, monitor e hub de jogos (node --test)
 ```
 
 ## Testes

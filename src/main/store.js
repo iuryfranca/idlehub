@@ -20,6 +20,10 @@ const ZOOM = Object.freeze({ min: 0.5, max: 2, step: 0.1 });
 const SPLIT = Object.freeze({ min: 0.4, max: 0.85, initial: 0.68 });
 
 const ID = /^[a-z0-9][a-z0-9-]{0,39}$/;
+// Icone do jogo: so PNG em data URL (a interface ja converte o favicon para 64x64), ate ~45 KB.
+const ICON = /^data:image\/png;base64,[A-Za-z0-9+/]+={0,2}$/;
+const ICON_MAX = 60000;
+const cleanIcon = (s) => (typeof s === 'string' && s.length <= ICON_MAX && ICON.test(s) ? s : null);
 
 const clamp = (n, lo, hi, fallback) => (Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : fallback);
 const pick = (value, allowed, fallback) => (allowed.includes(value) ? value : fallback);
@@ -55,7 +59,8 @@ function normalize(input) {
       aspect: pick(g.aspect, ASPECTS, 'livre'),
       layout: pick(g.layout, LAYOUTS, 'grade'),
       featured: typeof g.featured === 'string' ? g.featured : null,
-      split: Math.round(clamp(Number(g.split), SPLIT.min, SPLIT.max, SPLIT.initial) * 1000) / 1000
+      split: Math.round(clamp(Number(g.split), SPLIT.min, SPLIT.max, SPLIT.initial) * 1000) / 1000,
+      icon: cleanIcon(g.icon)
     });
   }
 
@@ -115,4 +120,4 @@ class Store {
   game(id) { return this.state.games.find((g) => g.id === id) || null; }
 }
 
-module.exports = { Store, normalize, cleanUrl, emptyState, partitionOf, accountOfPartition, langFromLocale, LIMITS, ASPECTS, LAYOUTS, THEMES, LANGS, MODES, ZOOM, SPLIT };
+module.exports = { Store, normalize, cleanUrl, cleanIcon, emptyState, partitionOf, accountOfPartition, langFromLocale, LIMITS, ASPECTS, LAYOUTS, THEMES, LANGS, MODES, ZOOM, SPLIT };

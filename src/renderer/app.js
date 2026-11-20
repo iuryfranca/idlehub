@@ -1,5 +1,5 @@
 'use strict';
-/* global HubLayout, HubIcon, HubI18n, HubMonitor, HubSkeleton, hub */
+/* global HubLayout, HubIcon, HubI18n, HubMonitor, HubSkeleton, HubGames, hub */
 (async function main() {
   const $ = (id) => document.getElementById(id);
   const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
@@ -125,12 +125,42 @@
     wv.addEventListener('did-fail-load', (e) => { if (e.isMainFrame && e.errorCode !== -3) setStatus(view, 'error'); });
     wv.addEventListener('render-process-gone', () => { showSkeleton(true); setStatus(view, 'error'); view.startedAt = Date.now(); });
     wv.addEventListener('page-title-updated', (e) => { head.title = e.title; });
+    wv.addEventListener('page-favicon-updated', (e) => captureIcon(acc, e.favicons));
 
     wireDrag(view);
     $('stage').appendChild(panel);
     setStatus(view, 'loading');
     views.set(acc.id, view);
     return view;
+  }
+
+  // Icone automatico: o favicon que o proprio jogo informa vira um PNG 64x64 guardado no estado.
+  // So busca quando o jogo ainda nao tem icone (uma vez por jogo por sessao do app).
+  const iconTried = new Set();
+  function toIconPng(src) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const c = document.createElement('canvas'); c.width = c.height = 64;
+        const w = img.naturalWidth || 64, h = img.naturalHeight || 64, k = 64 / Math.max(w, h);
+        const x = c.getContext('2d'); x.imageSmoothingQuality = 'high';
+        x.drawImage(img, (64 - w * k) / 2, (64 - h * k) / 2, w * k, h * k);
+        const png = c.toDataURL('image/png');
+        resolve(png.length <= 60000 ? png : null);
+      };
+      img.onerror = () => resolve(null);
+      img.src = src;
+    });
+  }
+  async function captureIcon(acc, favicons) {
+    const g = S.games.find((x) => x.id === acc.gameId);
+    if (!g || g.icon || iconTried.has(g.id) || !Array.isArray(favicons) || !favicons.length) return;
+    iconTried.add(g.id);
+    const inline = favicons.find((f) => /^data:image\//.test(f));
+    const raw = inline || await hub.fetchGameIcon(acc.id, favicons.filter((f) => /^https:\/\//.test(f)));
+    const png = raw && await toIconPng(raw);
+    if (!png) return;
+    commit((d) => { const x = d.games.find((y) => y.id === g.id); if (x && x.url === g.url) x.icon = png; });
   }
 
   function destroyView(id) {
@@ -245,6 +275,14 @@
     return ((words[0]?.[0] || '?') + (words[1]?.[0] || words[0]?.[1] || '')).toUpperCase();
   }
 
+  function gameTile(g) {
+    if (!g.icon) return el('span', 'tile', monogram(g.name));
+    const tile = el('span', 'tile has-icon');
+    const img = el('img'); img.src = g.icon; img.alt = ''; img.draggable = false;
+    tile.appendChild(img);
+    return tile;
+  }
+
   function renderGames() {
     const list = $('gameList');
     list.replaceChildren();
@@ -254,7 +292,7 @@
       b.classList.toggle('active', active);
       if (active) b.setAttribute('aria-current', 'page');
       const indicator = el('span', 'nav-indicator');
-      indicator.appendChild(el('span', 'tile', monogram(g.name)));
+      indicator.appendChild(gameTile(g));
       const n = accountsOf(g.id).length;
       b.append(indicator, el('span', 'label', g.name), el('span', 'count', n ? String(n) : ''));
       b.addEventListener('click', () => {
@@ -346,6 +384,7 @@
     document.querySelectorAll('[data-i18n]').forEach((n) => { n.textContent = t(n.dataset.i18n); });
     document.querySelectorAll('[data-i18n-title]').forEach((n) => { n.title = t(n.dataset.i18nTitle); });
     document.querySelectorAll('[data-i18n-aria]').forEach((n) => { n.setAttribute('aria-label', t(n.dataset.i18nAria)); });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach((n) => { n.placeholder = t(n.dataset.i18nPlaceholder); });
     splitter.title = t('dragToResize');
     for (const v of views.values()) if (v.sleepTexts) {
       v.sleepTexts.querySelector('h3').textContent = t('hibernated');
@@ -457,36 +496,22 @@
   const httpsOk = (u) => { try { const x = new URL(u); return x.protocol === 'https:'; } catch { return false; } };
   const gameProblem = (v) => (!v.name ? t('errGameName') : !httpsOk(v.url) ? t('errGameUrl') : null);
 
-  async function addGame() {
-    const v = await ask({
-      title: t('addGame'), ok: t('add'),
-      fields: [
-        { name: 'name', label: t('gameName'), placeholder: t('gameNamePlaceholder'), max: 40 },
-        { name: 'url', label: t('gameUrl'), placeholder: 'https://...' }
-      ],
-      extra: (inputs) => {
-        const wrap = el('div', 'catalog');
-        wrap.appendChild(el('span', 'catalog-label', t('suggestions')));
-        const chips = el('div', 'chips');
-        const have = new Set(S.games.map((g) => new URL(g.url).origin));
-        for (const c of catalog) {
-          const chip = el('button', 'chip state', c.name); chip.type = 'button';
-          if (have.has(new URL(c.url).origin)) { chip.disabled = true; chip.title = t('alreadyAdded'); }
-          chip.addEventListener('click', () => { inputs.name.value = c.name; inputs.url.value = c.url; inputs.url.focus(); });
-          chips.appendChild(chip);
-        }
-        wrap.appendChild(chips);
-        return wrap;
-      },
-      validate: gameProblem
-    });
-    if (!v) return;
-    const gid = uid('g'), aid = uid('a');
-    focusId = null;
-    await commit((d) => {
-      d.games.push({ id: gid, name: v.name, url: v.url, zoom: 1, aspect: 'livre', layout: 'grade', featured: null, split: 0.68 });
-      d.accounts.push({ id: aid, gameId: gid, name: t('defaultAccountName', { n: 1 }), muted: false });
-      d.prefs.activeGame = gid;
+  // Hub de jogos (game-hub.js): catalogo com logos + qualquer jogo pelo link.
+  function addGame() {
+    HubGames.open({
+      catalog, games: S.games,
+      onOpen: (gameId) => { if (screen !== 'games') setScreen('games'); focusId = null; commit((d) => { d.prefs.activeGame = gameId; }); },
+      onAdd: async ({ name, url }) => {
+        const gid = uid('g'), aid = uid('a');
+        if (screen !== 'games') setScreen('games');
+        focusId = null;
+        await commit((d) => {
+          d.games.push({ id: gid, name, url, zoom: 1, aspect: 'livre', layout: 'grade', featured: null, split: 0.68, icon: null });
+          d.accounts.push({ id: aid, gameId: gid, name: t('defaultAccountName', { n: 1 }), muted: false });
+          d.prefs.activeGame = gid;
+        });
+        toast(t('hubAddedToast', { name }));
+      }
     });
   }
 
@@ -522,7 +547,11 @@
       for (const id of gone) hub.clearAccount(id);
       return;
     }
-    commit((d) => { const x = d.games.find((y) => y.id === g.id); x.name = v.name; x.url = v.url; });
+    commit((d) => {
+      const x = d.games.find((y) => y.id === g.id);
+      if (new URL(x.url).origin !== new URL(v.url).origin) { x.icon = null; iconTried.delete(x.id); } // outro site: outro icone
+      x.name = v.name; x.url = v.url;
+    });
   }
 
   async function addAccount() {
@@ -568,7 +597,7 @@
 
   hub.onFullscreen((on) => { isFullscreen = on; renderBar(); });
   hub.onHotkey((key) => {
-    if ($('dialog').open) return;
+    if ($('dialog').open || $('hubDialog').open) return;
     if (key === 'escape') { if (focusId) { focusId = null; layoutStage(); renderAccounts(); } return; }
     if (key === 'fullscreen') return hub.toggleFullscreen();
     if (key === 'drawer') return toggleDrawer();
@@ -581,7 +610,7 @@
     if (m) { const g = game(); const a = g && accountsOf(g.id)[Number(m[1]) - 1]; if (a) { toggleFocus(a.id); renderAccounts(); } }
   });
   // Esc com o foco na propria interface (fora de um jogo)
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && focusId && !$('dialog').open) { focusId = null; layoutStage(); renderAccounts(); } });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && focusId && !$('dialog').open && !$('hubDialog').open) { focusId = null; layoutStage(); renderAccounts(); } });
 
   let toastT = 0;
   function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2600); }
@@ -641,6 +670,10 @@
   for (const [id, name] of Object.entries(icons)) $(id).replaceChildren(HubIcon(name));
   document.querySelector('#addGame .fab-icon').replaceWith(HubIcon('plus'));
   $('navMonitorIcon').replaceWith(HubIcon('chart'));
+  $('hubAddressIcon').replaceWith(HubIcon('search'));
+  $('hubClose').replaceChildren(HubIcon('close'));
+  $('hubClose').addEventListener('click', () => $('hubDialog').close());
+  $('hubDialog').addEventListener('click', (e) => { if (e.target === $('hubDialog')) $('hubDialog').close(); }); // clique fora fecha
   document.querySelector('#addAccount .btn-icon').replaceWith(HubIcon('plus'));
 
   render();

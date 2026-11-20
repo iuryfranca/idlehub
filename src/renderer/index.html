@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="m3/tokens.css">
   <link rel="stylesheet" href="m3/colors.css">
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="game-hub.css">
 </head>
 <body>
   <!-- Textos ficam vazios aqui: o app.js preenche pelo dicionario do idioma escolhido (data-i18n*). -->
@@ -101,12 +102,38 @@
     </form>
   </dialog>
 
+  <!-- Hub de jogos (Adicionar jogo): barra de endereco + catalogo com logos. Montado pelo game-hub.js. -->
+  <dialog class="hub-dialog" id="hubDialog" data-i18n-aria="hubTitle">
+    <div class="hub-head">
+      <div class="hub-heading">
+        <h2 data-i18n="hubTitle"></h2>
+        <p data-i18n="hubSubtitle"></p>
+      </div>
+      <button class="icon-btn state" id="hubClose" type="button" data-i18n-title="close"></button>
+    </div>
+    <form class="hub-address" id="hubAddress" autocomplete="off">
+      <span class="hub-address-icon" id="hubAddressIcon"></span>
+      <input id="hubInput" type="text" spellcheck="false" data-i18n-placeholder="hubSearch" data-i18n-aria="hubSearch">
+      <kbd class="hub-kbd">Enter</kbd>
+    </form>
+    <div class="hub-scroll">
+      <section class="hub-custom" id="hubCustom" hidden aria-live="polite"></section>
+      <div class="hub-section">
+        <span class="hub-section-label" data-i18n="hubCatalog"></span>
+        <span class="hub-count" id="hubCount"></span>
+      </div>
+      <div class="hub-grid" id="hubGrid"></div>
+      <p class="hub-empty" id="hubEmpty" hidden></p>
+    </div>
+  </dialog>
+
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="i18n.js"></script>
   <script src="layout.js"></script>
   <script src="icons.js"></script>
   <script src="skeleton.js"></script>
+  <script src="game-hub.js"></script>
   <script src="winproc-ui.js"></script>
   <script src="monitor-ui.js"></script>
   <script src="app.js"></script>
