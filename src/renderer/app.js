@@ -214,6 +214,14 @@
   $('stage').appendChild(splitter);
 
   let liveSplit = null; // divisoria sendo arrastada (so grava ao soltar)
+  // Posicao/tamanho em pixels inteiros, e so quando mudou: cada mudanca de tamanho faz o jogo do painel
+  // redesenhar tudo, entao repetir o mesmo valor (ou meio pixel de diferenca) custa caro a toa.
+  function setBox(node, x, y, w, h) {
+    const key = Math.round(x) + ',' + Math.round(y) + ',' + Math.round(w) + ',' + Math.round(h);
+    if (node._box === key) return;
+    node._box = key;
+    Object.assign(node.style, { left: Math.round(x) + 'px', top: Math.round(y) + 'px', width: Math.round(w) + 'px', height: Math.round(h) + 'px' });
+  }
   function layoutStage() {
     const stage = $('stage');
     const sp = space();
@@ -229,9 +237,9 @@
       v.el.classList.remove('parked');
       v.el.classList.toggle('is-main', out.main === id && sp.layout === 'destaque' && !focusId && ids.length > 1);
       v.el.classList.toggle('is-focus', focusId === id);
-      Object.assign(v.el.style, { left: GAP + r.x + 'px', top: GAP + r.y + 'px', width: r.w + 'px', height: r.h + 'px' });
+      setBox(v.el, GAP + r.x, GAP + r.y, r.w, r.h);
       const f = HubLayout.fit(r.w - BODY_INSET_X, r.h - HEAD - BODY_INSET_Y, sp.aspect);
-      Object.assign(v.frame.style, { left: f.x + 'px', top: f.y + 'px', width: f.w + 'px', height: f.h + 'px' });
+      setBox(v.frame, f.x, f.y, f.w, f.h);
       v.idx.textContent = String(ids.indexOf(id) + 1);
       v.btnStar.hidden = ids.length < 2 || (sp.layout === 'destaque' && out.main === id);
       v.btnFocus.replaceChildren(HubIcon(focusId === id ? 'shrink' : 'expand'));
@@ -241,7 +249,9 @@
       Object.assign(splitter.style, { left: GAP + out.splitter.x + 'px', top: GAP + 'px', width: out.splitter.w + 'px', height: out.splitter.h + 'px' });
     } else splitter.hidden = true;
   }
-  new ResizeObserver(() => layoutStage()).observe($('stage'));
+  let layoutQueued = 0;
+  const queueLayout = () => { if (!layoutQueued) layoutQueued = requestAnimationFrame(() => { layoutQueued = 0; layoutStage(); }); };
+  new ResizeObserver(queueLayout).observe($('stage'));
 
   function toggleFocus(id) { focusId = focusId === id ? null : id; layoutStage(); renderAccounts(); }
 
@@ -251,7 +261,7 @@
     splitter.setPointerCapture(e.pointerId);
     document.body.classList.add('resizing');
     const rect = $('stage').getBoundingClientRect();
-    const move = (ev) => { liveSplit = Math.min(0.85, Math.max(0.4, (ev.clientX - rect.left - GAP) / (rect.width - GAP * 3))); layoutStage(); };
+    const move = (ev) => { liveSplit = Math.min(0.85, Math.max(0.4, (ev.clientX - rect.left - GAP) / (rect.width - GAP * 3))); queueLayout(); };
     const up = () => {
       splitter.removeEventListener('pointermove', move);
       document.body.classList.remove('resizing');
@@ -887,4 +897,9 @@
   $('mixDialog').addEventListener('click', (e) => { if (e.target === $('mixDialog')) $('mixDialog').close(); });
 
   render();
+
+  // Decodifica os logos do hub de jogos com o app ocioso: a 1a abertura do hub nao para para decodificar 12 imagens.
+  (window.requestIdleCallback || ((fn) => setTimeout(fn, 1500)))(() => {
+    for (const c of catalog) { const img = new Image(); img.src = 'assets/games/' + c.logo; img.decode().catch(() => {}); }
+  });
 })();

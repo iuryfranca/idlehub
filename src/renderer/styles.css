@@ -23,8 +23,9 @@ button, input, select { font: inherit; color: inherit; letter-spacing: inherit; 
 .state { position: relative; isolation: isolate; overflow: hidden; cursor: pointer; }
 .state::before {
   content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit;
-  background: currentColor; opacity: 0; transition: opacity var(--md-sys-motion-duration-short) linear;
+  background: currentColor; opacity: 0; transition: opacity 120ms linear;
 }
+.state:active::before { transition-duration: 0ms; }
 .state:hover::before { opacity: var(--md-sys-state-hover); }
 .state:focus-visible::before { opacity: var(--md-sys-state-focus); }
 .state:active::before { opacity: var(--md-sys-state-pressed); }
@@ -37,8 +38,13 @@ button, input, select { font: inherit; color: inherit; letter-spacing: inherit; 
 /* ---------- estrutura ---------- */
 .shell {
   display: grid; grid-template-columns: var(--drawer) 1fr; height: 100vh;
-  transition: grid-template-columns var(--md-sys-motion-duration-medium) var(--md-sys-motion-easing-emphasized);
+  /* Sem transicao na largura: animar a coluna redimensiona cada painel de jogo (um processo do Chromium)
+     a cada quadro, e era isso que travava. A lateral troca de uma vez e so os textos aparecem com fade. */
 }
+.drawer .label, .drawer .section-label, .drawer .accounts, .drawer .brand-name, .drawer .foot-label, .drawer .lang {
+  animation: drawer-text-in 160ms var(--md-sys-motion-easing-emphasized-decelerate);
+}
+@keyframes drawer-text-in { from { opacity: 0; } }
 .shell.drawer-closed { grid-template-columns: var(--rail) 1fr; }
 
 /* ---------- navigation drawer (aberta) / navigation rail (recolhida) ---------- */
@@ -275,7 +281,7 @@ body.resizing .splitter::after { width: 8px; height: 56px; background: var(--md-
   background: var(--md-sys-color-surface-container-high); color: var(--md-sys-color-on-surface);
   box-shadow: var(--md-sys-elevation-level3);
 }
-.dialog[open] { animation: dialog-in var(--md-sys-motion-duration-long) var(--md-sys-motion-easing-emphasized-decelerate); }
+.dialog[open] { animation: dialog-in 240ms var(--md-sys-motion-easing-emphasized-decelerate); }
 @keyframes dialog-in { from { opacity: 0; transform: translateY(-16px) scale(.98); } }
 .dialog::backdrop { background: var(--md-sys-color-scrim); opacity: .32; }
 .dialog form { padding: var(--space-6); display: flex; flex-direction: column; gap: var(--space-4); }
@@ -524,18 +530,23 @@ body.resizing .splitter::after { width: 8px; height: 56px; background: var(--md-
   --sk-shine: color-mix(in srgb, var(--md-sys-color-on-surface) 16%, transparent);
   --sk-fill: linear-gradient(90deg, var(--sk-base) 0%, var(--sk-shine) 50%, var(--sk-base) 100%);
 }
-@keyframes sk-shimmer { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+@keyframes sk-shimmer { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
 
+/* Base parada + um brilho que atravessa por transform (so composicao, sem repintar a cada quadro). */
 .sk,
 .mon-card.is-loading .mon-card-value::after,
 .mon-card.is-loading .mon-card-desc::after,
 .mon-card.is-loading .chart {
-  background: var(--sk-fill);
-  background-size: 200% 100%;
+  background: var(--sk-base);
+  position: relative; overflow: hidden; isolation: isolate;
+}
+.sk::before, .mon-card.is-loading .chart::before {
+  content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: linear-gradient(90deg, transparent 0%, var(--sk-shine) 50%, transparent 100%);
   animation: sk-shimmer 1.6s linear infinite;
 }
 @media (prefers-reduced-motion: reduce) {
-  .sk, .mon-card.is-loading .mon-card-value::after, .mon-card.is-loading .mon-card-desc::after, .mon-card.is-loading .chart { animation: none; background: var(--sk-base); }
+  .sk::before, .mon-card.is-loading .chart::before { animation: none; display: none; }
 }
 .sk-bar { display: block; max-width: 100%; border-radius: var(--md-sys-shape-corner-small); }
 .sk-dot { width: 24px; height: 24px; border-radius: var(--md-sys-shape-corner-full); }

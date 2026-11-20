@@ -65,7 +65,7 @@
       const b = el('button', 'hub-card state'); b.type = 'button';
       b.title = have ? t('hubOpenAdded') : t('hubAddThis', { name: c.name });
       const art = el('span', 'hub-art' + (c.fit === 'cover' ? ' cover' : ''));
-      const img = el('img'); img.src = 'assets/games/' + c.logo; img.alt = ''; img.draggable = false; img.loading = 'lazy';
+      const img = el('img'); img.src = 'assets/games/' + c.logo; img.alt = ''; img.draggable = false; img.decoding = 'async';
       art.appendChild(img);
       const meta = el('span', 'hub-meta');
       meta.append(el('span', 'hub-name', c.name), el('span', 'hub-host', hostOf(c.url)));
