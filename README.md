@@ -44,7 +44,7 @@ Como o código é aberto, qualquer pessoa pode repetir essa verificação.
 Requisitos: Windows 10/11 e [Node.js](https://nodejs.org/) 24 ou mais recente.
 
 ```powershell
-git clone <endereço deste repositório> idlehub   # ou "Download ZIP" na página do repositório
+git clone https://github.com/iuryfranca/idlehub.git   # ou "Download ZIP" na página do repositório
 cd idlehub
 npm install            # baixa o Electron (uma vez)
 npm start              # ou dois cliques em "Abrir IdleHub.bat"

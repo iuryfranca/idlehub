@@ -11,7 +11,7 @@ Site estático de uma página só (`index.html` + `styles.css`), feito para o Gi
 
 ## Antes de publicar
 
-1. Troque `https://github.com/USUARIO/idlehub` (3 ocorrências em `index.html`) pelo endereço real do repositório.
+1. Os links já apontam para `https://github.com/iuryfranca/idlehub` (3 em `index.html`).
 2. O botão "Baixar para Windows" aponta para `.../releases/latest`: publique um Release com o instalador antes.
 3. No GitHub: Settings → Pages → Source "GitHub Actions" (ou "Deploy from a branch" apontando para esta pasta).
 
