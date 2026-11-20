@@ -1,0 +1,16 @@
+{
+  "name": "idlehub",
+  "productName": "IdleHub",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Várias contas de jogos idle de navegador numa janela só, cada uma com sessão isolada. Projeto de estudo.",
+  "main": "src/main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test \"test/*.test.js\""
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "43.8.12"
+  }
+}

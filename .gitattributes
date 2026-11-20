@@ -1,0 +1,4 @@
+# Fins de linha: LF no repositorio; .bat precisa de CRLF para o cmd.
+* text=auto eol=lf
+*.bat text eol=crlf
+*.png binary

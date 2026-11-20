@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'">
+  <title>IdleHub</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-theme="grafite">
+  <div class="shell" id="shell">
+    <aside class="drawer" id="drawer" aria-label="Jogos e contas">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span class="brand-name">IdleHub</span>
+      </div>
+
+      <div class="section-label">Jogos</div>
+      <nav class="game-list" id="gameList"></nav>
+      <button class="add-row" id="addGame" type="button"><span class="plus" aria-hidden="true">+</span><span class="label">Adicionar jogo</span></button>
+
+      <div class="accounts" id="accountsSection">
+        <div class="section-label" id="accountsLabel">Contas</div>
+        <ul class="account-list" id="accountList"></ul>
+        <button class="add-row" id="addAccount" type="button"><span class="plus" aria-hidden="true">+</span><span class="label">Nova conta</span></button>
+      </div>
+
+      <div class="drawer-foot">
+        <div class="themes" id="themes" role="radiogroup" aria-label="Tema"></div>
+        <span class="version" id="version"></span>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="bar" id="bar">
+        <button class="icon-btn" id="toggleDrawer" type="button" title="Mostrar/ocultar lateral (Ctrl+B)"></button>
+        <div class="title">
+          <span class="title-name" id="gameTitle">Nenhum jogo</span>
+          <span class="title-host" id="gameHost"></span>
+        </div>
+        <div class="spacer"></div>
+        <div class="controls" id="gameControls">
+          <div class="seg" role="radiogroup" aria-label="Layout">
+            <button type="button" data-layout="grade" title="Grade: todas as contas do mesmo tamanho">Grade</button>
+            <button type="button" data-layout="destaque" title="Destaque: uma conta grande e as outras ao lado">Destaque</button>
+          </div>
+          <div class="zoom" aria-label="Zoom do jogo">
+            <button type="button" class="icon-btn small" id="zoomOut" title="Diminuir zoom (Ctrl -)">−</button>
+            <button type="button" class="zoom-val" id="zoomVal" title="Voltar para 100% (Ctrl 0)">100%</button>
+            <button type="button" class="icon-btn small" id="zoomIn" title="Aumentar zoom (Ctrl +)">+</button>
+          </div>
+          <label class="select" title="Proporção dos painéis">
+            <select id="aspect">
+              <option value="livre">Livre</option>
+              <option value="16:9">16:9</option>
+              <option value="4:3">4:3</option>
+              <option value="3:2">3:2</option>
+              <option value="9:16">9:16</option>
+            </select>
+          </label>
+          <button class="icon-btn" id="gameMenu" type="button" title="Editar jogo"></button>
+        </div>
+        <button class="icon-btn" id="muteAll" type="button" title="Som geral (Ctrl+M)"></button>
+        <button class="icon-btn" id="fullscreen" type="button" title="Tela cheia (F11)"></button>
+      </header>
+
+      <div class="stage" id="stage">
+        <div class="empty" id="empty"></div>
+      </div>
+    </main>
+  </div>
+
+  <dialog class="dialog" id="dialog">
+    <form method="dialog" id="dialogForm">
+      <h2 id="dialogTitle"></h2>
+      <div class="dialog-body" id="dialogBody"></div>
+      <div class="dialog-actions">
+        <button type="button" class="btn ghost" id="dialogCancel">Cancelar</button>
+        <button type="submit" class="btn primary" id="dialogOk">OK</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="layout.js"></script>
+  <script src="icons.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
