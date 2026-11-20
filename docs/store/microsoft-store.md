@@ -8,16 +8,16 @@ pacote; quem instala por lá não vê o aviso do SmartScreen. O instalador `.exe
 1. Crie a conta de desenvolvedor **individual** em https://developer.microsoft.com/store/register com uma conta
    Microsoft pessoal. Para pessoa física, o registro é grátis.
 2. Na Partner Center: **Apps e jogos → Novo produto → App MSIX ou PWA** → reserve o nome **IdleHub**.
-3. Abra **Gerenciamento de produto → Identidade do produto** e copie os três valores para `package.json`, em
-   `build.appx`:
+3. Abra **Gerenciamento de produto → Identidade do produto**. Os valores já estão em `package.json` (`build.appx`):
 
-   | Partner Center | `package.json` (`build.appx`) | Valor provisório hoje |
+   | Partner Center | `package.json` (`build.appx`) | Valor |
    | --- | --- | --- |
-   | Package/Identity/Name | `identityName` | `00000IuryFranca.IdleHub` |
-   | Package/Identity/Publisher | `publisher` | `CN=00000000-0000-0000-0000-000000000000` |
+   | Package/Identity/Name | `identityName` | `IuryFrana.IdleHub` |
+   | Package/Identity/Publisher | `publisher` | `CN=5D3BA8D1-2789-494E-B190-602AEA306B85` |
    | Package/Properties/PublisherDisplayName | `publisherDisplayName` | `Iury França` |
 
-   Sem esses três valores iguais aos da Partner Center, a Store recusa o pacote no envio.
+   Package Family Name: `IuryFrana.IdleHub_w5g7m8kvp66nc` · Store ID: `9PLXW446BSRK` ·
+   link: https://apps.microsoft.com/detail/9PLXW446BSRK (funciona depois da aprovação).
 
 ## 2. Gerar o pacote
 

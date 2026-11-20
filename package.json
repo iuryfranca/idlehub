@@ -71,8 +71,8 @@
     },
     "publish": null,
     "appx": {
-      "identityName": "00000IuryFranca.IdleHub",
-      "publisher": "CN=00000000-0000-0000-0000-000000000000",
+      "identityName": "IuryFrana.IdleHub",
+      "publisher": "CN=5D3BA8D1-2789-494E-B190-602AEA306B85",
       "publisherDisplayName": "Iury França",
       "applicationId": "IdleHub",
       "displayName": "IdleHub",
