@@ -12,7 +12,8 @@
     "screens": "node scripts/capture-screens.js",
     "icon": "electron scripts/build-icon.js",
     "atalho": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/criar-atalho.ps1",
-    "dist": "electron-builder --win nsis --publish never"
+    "dist": "electron-builder --win nsis --publish never",
+    "dist:store": "electron-builder --win appx --publish never"
   },
   "license": "MIT",
   "devDependencies": {
@@ -68,6 +69,23 @@
       "artifactName": "IdleHub-Setup-${version}.exe",
       "deleteAppDataOnUninstall": false
     },
-    "publish": null
+    "publish": null,
+    "appx": {
+      "identityName": "00000IuryFranca.IdleHub",
+      "publisher": "CN=00000000-0000-0000-0000-000000000000",
+      "publisherDisplayName": "Iury França",
+      "applicationId": "IdleHub",
+      "displayName": "IdleHub",
+      "backgroundColor": "transparent",
+      "showNameOnTiles": false,
+      "languages": [
+        "pt-BR",
+        "en-US",
+        "es-ES"
+      ],
+      "artifactName": "IdleHub-${version}-store.appx",
+      "minVersion": "10.0.17763.0",
+      "maxVersionTested": "10.0.26100.0"
+    }
   }
 }

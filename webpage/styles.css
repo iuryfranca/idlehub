@@ -237,3 +237,15 @@ kbd { display: inline-flex; align-items: center; height: 34px; padding: 0 12px; 
   html { scroll-behavior: auto; }
   .btn { transition: none; }
 }
+
+/* ---------- pagina de texto (politica de privacidade) ---------- */
+.doc { max-width: 760px; margin: 0 auto; padding: 48px var(--gutter) 96px; line-height: 1.65; }
+.doc section + section { margin-top: 72px; padding-top: 48px; border-top: 1px solid rgb(255 255 255 / .08); }
+.doc h1 { font-size: clamp(32px, 5vw, 44px); line-height: 1.15; margin: 0 0 8px; }
+.doc h2 { font-size: 20px; margin: 32px 0 8px; }
+.doc p, .doc li { color: var(--muted); }
+.doc strong { color: var(--text); }
+.doc ul { padding-left: 22px; }
+.doc a, .footer a { color: var(--primary); }
+.doc-meta { font-size: 14px; margin-bottom: 24px; }
+.doc code { font-size: .92em; color: var(--text); }

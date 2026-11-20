@@ -60,7 +60,8 @@ npm start              # ou dois cliques em "Abrir IdleHub.bat"
 npm run atalho         # opcional: cria o atalho "IdleHub" na área de trabalho, com o ícone do app
 ```
 
-Para gerar o instalador você mesmo: `npm run dist` (sai em `dist/`).
+Para gerar o instalador você mesmo: `npm run dist` (sai em `dist/`). O pacote MSIX da Microsoft Store sai com
+`npm run dist:store`; o passo a passo do envio está em [docs/store/microsoft-store.md](docs/store/microsoft-store.md).
 
 ## O que já faz
 

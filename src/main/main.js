@@ -24,7 +24,8 @@ if (!hasLock) app.quit();
 
 app.userAgentFallback = chromeLikeUserAgent(app.userAgentFallback);
 // Identidade propria no Windows: a barra de tarefas agrupa e mostra o icone do IdleHub, nao o do Electron.
-if (process.platform === 'win32') app.setAppUserModelId('IdleHub');
+// Na versao da Microsoft Store (MSIX) quem define isso e o pacote; sobrescrever quebraria o agrupamento.
+if (process.platform === 'win32' && !process.windowsStore) app.setAppUserModelId('IdleHub');
 
 /** @type {BrowserWindow|null} */
 let mainWindow = null;
