@@ -108,7 +108,7 @@ export function Hero() {
         <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }} className="mt-5 font-mono text-xs tracking-wide text-on-surface-variant">{t('heroMeta')}</motion.p>
       </div>
 
-      <div className="relative mx-auto mt-16 w-full max-w-[1680px] px-4 [perspective:2000px] sm:px-8">
+      <div className="relative mx-auto mt-16 max-w-[1360px] px-4 [perspective:1800px] lg:px-10">
         <Float className="-left-6 top-10 w-52" delay={1.4} y={floatA}>
           <div className="mb-1 flex items-center gap-2 text-xs text-on-surface-variant"><Cpu className="size-3.5" /> {t('floatCpu')} <span className="ml-auto">{t('floatNow')}</span></div>
           <CpuSpark />
