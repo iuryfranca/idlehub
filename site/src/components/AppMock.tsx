@@ -47,7 +47,7 @@ function GamePanel({ acc, tick, index, featured, mixed }: { acc: Acc; tick: numb
   const level = 8 + (s % 30) + Math.floor(tick / 40);
   return (
     <div className={`flex h-full min-h-0 flex-col overflow-hidden rounded-md border ${featured ? 'border-primary' : 'border-outline-variant/70'} bg-s1`}>
-      <div className="flex h-7 shrink-0 items-center gap-1.5 px-2 text-[10px] text-on-surface">
+      <div className="flex h-7 shrink-0 items-center gap-1.5 px-2 text-[10px] text-on-surface xl:h-8 xl:text-xs">
         <span className={`grid size-4 place-items-center rounded-full text-[8px] ${featured ? 'bg-primary text-on-primary' : 'bg-s4 text-on-surface-variant'}`}>{index + 1}</span>
         <span className={`size-1.5 rounded-full ${acc.sleep ? 'bg-outline' : 'bg-[#76daa1]'}`} />
         <span className="truncate font-medium">{acc.name}</span>
@@ -62,26 +62,26 @@ function GamePanel({ acc, tick, index, featured, mixed }: { acc: Acc; tick: numb
           <span className="text-[10px] font-medium text-on-surface">{t('mockHibernated')}</span>
         </div>
       ) : (
-        <div className={`relative m-1 mt-0 flex flex-1 flex-col justify-between overflow-hidden rounded-sm bg-gradient-to-b ${g.hue} p-2 font-serif text-[#f3e9d2]`}>
-          <div className="flex items-center justify-between text-[8px] uppercase tracking-[0.14em] text-[#c9b98a]">
+        <div className={`relative m-1 mt-0 flex flex-1 flex-col justify-between overflow-hidden rounded-sm bg-gradient-to-b ${g.hue} p-2 font-serif text-[#f3e9d2] xl:p-3`}>
+          <div className="flex items-center justify-between text-[8px] uppercase tracking-[0.14em] text-[#c9b98a] xl:text-[10px]">
             <span className="truncate">{g.name}</span>
             <span className="rounded-full border border-[#6b5a33] bg-black/40 px-1.5 py-px font-sans font-bold normal-case tracking-normal text-[#ffd77a] tabular-nums">● {gold.toFixed(1)} K</span>
           </div>
           <div className="flex flex-col items-center gap-1">
             {/* surge com mola quando o monstro muda; o balanco e CSS continuo (nao reinicia a cada passo do relogio) */}
             <motion.div key={round} initial={{ scale: 0.4, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 380, damping: 18 }}>
-              <div className={`mock-bob h-7 w-9 rounded-[50%_50%_44%_44%] bg-gradient-to-br ${g.blob} shadow-[0_8px_14px_rgba(0,0,0,.5)]`} />
+              <div className={`mock-bob h-7 w-9 xl:h-10 xl:w-12 rounded-[50%_50%_44%_44%] bg-gradient-to-br ${g.blob} shadow-[0_8px_14px_rgba(0,0,0,.5)]`} />
             </motion.div>
-            <span className="truncate text-[10px] font-bold">{foe}</span>
-            <div className="h-1.5 w-3/4 overflow-hidden rounded-full border border-[#6b5a33] bg-black/50">
+            <span className="truncate text-[10px] font-bold xl:text-sm">{foe}</span>
+            <div className="h-1.5 w-3/4 overflow-hidden rounded-full xl:h-2 border border-[#6b5a33] bg-black/50">
               {/* scaleX (so composicao, sem refazer layout) no mesmo ritmo do relogio; key por rodada: renasce cheia sem animar para tras */}
               <div key={round} className="h-full origin-left bg-gradient-to-r from-[#d94b3b] to-[#f08a4b]"
                 style={{ transform: `scaleX(${hp / 100})`, transition: phase === 0 ? 'none' : `transform ${TICK}ms linear` }} />
             </div>
           </div>
-          <div className="flex gap-1 font-sans text-[8px]">
-            <div className="flex-1 rounded-sm border border-[#6b5a33] bg-black/40 px-1 py-0.5">{t('mockLevel')} <b className="block text-[10px] text-[#ffd77a]">{level}</b></div>
-            <div className="flex-1 rounded-sm border border-[#6b5a33] bg-black/40 px-1 py-0.5">DPS <b className="block text-[10px] text-[#ffd77a]">{level * 113}</b></div>
+          <div className="flex gap-1 font-sans text-[8px] xl:gap-1.5 xl:text-[10px]">
+            <div className="flex-1 rounded-sm border border-[#6b5a33] bg-black/40 px-1 py-0.5">{t('mockLevel')} <b className="block text-[10px] text-[#ffd77a] xl:text-xs">{level}</b></div>
+            <div className="flex-1 rounded-sm border border-[#6b5a33] bg-black/40 px-1 py-0.5">DPS <b className="block text-[10px] text-[#ffd77a] xl:text-xs">{level * 113}</b></div>
           </div>
         </div>
       )}
@@ -138,9 +138,9 @@ export function AppMock() {
         <Mark className="size-3.5" /><span>IdleHub</span>
         <span className="ml-auto flex items-center gap-4"><Minus className="size-3" /><Square className="size-2.5" /><X className="size-3" /></span>
       </div>
-      <div className="flex h-[360px] sm:h-[480px] lg:h-[600px] xl:h-[680px]">
+      <div className="flex h-[380px] sm:h-[520px] lg:h-[680px] xl:h-[760px] 2xl:h-[840px]">
         {/* lateral */}
-        <aside className="hidden w-48 shrink-0 flex-col gap-1 bg-s1 p-2.5 text-[11px] md:flex xl:w-56 xl:text-xs">
+        <aside className="hidden w-48 shrink-0 flex-col gap-1 bg-s1 p-2.5 text-[11px] md:flex xl:w-60 xl:text-xs 2xl:w-64 2xl:text-[13px]">
           <div className="mb-1 flex items-center gap-2 px-1.5 py-1 text-sm font-medium text-on-surface"><PanelLeft className="size-3.5 text-on-surface-variant" /> IdleHub</div>
           <div className="mb-2 flex h-9 w-fit items-center gap-2 rounded-lg bg-primary-container px-3 font-medium text-on-primary-container shadow-sm">+ <span>{t('mockAddGame')}</span></div>
           <div className="px-2 pb-1 pt-2 text-[10px] font-medium text-on-surface-variant">{t('mockGames')}</div>
