@@ -13,7 +13,8 @@
     "icon": "electron scripts/build-icon.js",
     "atalho": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/criar-atalho.ps1",
     "dist": "electron-builder --win nsis --publish never",
-    "dist:store": "electron-builder --win appx --publish never"
+    "dist:store": "electron-builder --win appx --publish never",
+    "store-logos": "electron scripts/build-store-logos.js"
   },
   "license": "MIT",
   "devDependencies": {
