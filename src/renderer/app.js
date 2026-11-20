@@ -1,5 +1,5 @@
 'use strict';
-/* global HubLayout, HubIcon, HubI18n, HubMonitor, hub */
+/* global HubLayout, HubIcon, HubI18n, HubMonitor, HubSkeleton, hub */
 (async function main() {
   const $ = (id) => document.getElementById(id);
   const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
@@ -112,13 +112,18 @@
     wv.setAttribute('allowpopups', '');
     wv.setAttribute('src', g.url);
     frame.appendChild(wv);
+    // Skeleton do painel ate a 1a carga do jogo terminar (e de novo se o processo do painel cair).
+    const sk = HubSkeleton.panel();
+    frame.appendChild(sk);
+    body.setAttribute('aria-busy', 'true');
+    const showSkeleton = (on) => { sk.hidden = !on; body.setAttribute('aria-busy', String(on)); };
     body.appendChild(frame);
     view.wv = wv;
     wv.addEventListener('dom-ready', () => { view.ready = true; applyZoom(view); applyAudio(view); });
     wv.addEventListener('did-start-loading', () => setStatus(view, 'loading'));
-    wv.addEventListener('did-stop-loading', () => { if (view.status === 'loading') setStatus(view, 'ok'); });
+    wv.addEventListener('did-stop-loading', () => { showSkeleton(false); if (view.status === 'loading') setStatus(view, 'ok'); });
     wv.addEventListener('did-fail-load', (e) => { if (e.isMainFrame && e.errorCode !== -3) setStatus(view, 'error'); });
-    wv.addEventListener('render-process-gone', () => { setStatus(view, 'error'); view.startedAt = Date.now(); });
+    wv.addEventListener('render-process-gone', () => { showSkeleton(true); setStatus(view, 'error'); view.startedAt = Date.now(); });
     wv.addEventListener('page-title-updated', (e) => { head.title = e.title; });
 
     wireDrag(view);

@@ -1,5 +1,5 @@
 'use strict';
-/* global HubIcon */
+/* global HubIcon, HubSkeleton */
 // Secao "Processos do Windows" da tela Monitor.
 // Comeca desligada: a lista so e coletada depois que a pessoa liga o switch.
 (function () {
@@ -137,10 +137,19 @@
       });
 
       if (!state.data?.ready) {
-        table.hidden = true; more.hidden = true; showing.textContent = '';
-        empty.hidden = false; empty.textContent = t('winProcsLoading');
+        // skeleton no formato da propria tabela; o texto fica so para leitor de tela
+        more.hidden = true; showing.textContent = '';
+        table.hidden = false; table.setAttribute('aria-busy', 'true');
+        if (!tbody.querySelector('.sk-row')) {
+          for (const [pid, r] of rows) { r.row.remove(); rows.delete(pid); }
+          tbody.appendChild(HubSkeleton.tableRows(8, { columns: 4, actions: 1 }));
+        }
+        empty.hidden = false; empty.classList.add('sr-only'); empty.textContent = t('winProcsLoading');
         return;
       }
+      tbody.querySelectorAll('.sk-row').forEach((r) => r.remove());
+      table.removeAttribute('aria-busy');
+      empty.classList.remove('sr-only');
       const all = visibleList();
       const list = state.showAll ? all : all.slice(0, PAGE);
       countChip.textContent = t('chipProcs', { n: state.data.list.length });

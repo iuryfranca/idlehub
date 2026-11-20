@@ -1,5 +1,5 @@
 'use strict';
-/* global HubIcon, HubWinProc */
+/* global HubIcon, HubWinProc, HubSkeleton */
 // Tela Monitor: graficos e numeros em tempo real da maquina, das contas e dos processos internos do IdleHub.
 // O historico fica so na memoria desta tela (5 minutos) e some ao fechar o app.
 (function () {
@@ -124,6 +124,8 @@
     const hInternals = sectionHeader('layers');
     const winproc = HubWinProc({ t, el, fmt: { pct, bytes }, actions, sectionHeader });
     const internals = el('div', 'mon-internals');
+    internals.setAttribute('aria-busy', 'true');
+    internals.appendChild(HubSkeleton.procCards(4));
     const foot = el('footer', 'mon-foot');
     const live = el('p');
     const cost = el('p');
@@ -173,6 +175,8 @@
     }
 
     function syncRows(state) {
+      tbody.querySelectorAll('.sk-row').forEach((r) => r.remove());
+      table.removeAttribute('aria-busy');
       const ids = state.accounts.map((a) => a.id);
       for (const [id, r] of rows) if (!ids.includes(id)) { r.row.remove(); rows.delete(id); rowHist.delete(id); }
       for (const acc of state.accounts) {
@@ -181,6 +185,13 @@
       }
       accEmpty.hidden = state.accounts.length > 0;
       table.hidden = !state.accounts.length;
+    }
+
+    // Cartao de metrica carregando: o proprio cartao vira skeleton (numero, descricao e grafico).
+    function setCardLoading(c, on) {
+      c.box.classList.toggle('is-loading', on);
+      c.box.setAttribute('aria-busy', String(on));
+      if (on) { c.value.textContent = t('loading'); c.desc.textContent = '\u00a0'; }
     }
 
     // ---------- textos (idioma) ----------
@@ -225,6 +236,8 @@
 
       hMachine.meta.replaceChildren(chip(s.cpuModel), chip(t('threads', { n: s.cores })), chip(t('ramTotal', { ram: bytes(s.memTotal) })));
 
+      setCardLoading(card.cpu, false);
+      setCardLoading(card.mem, false);
       card.cpu.value.textContent = pct(s.cpu);
       card.cpu.desc.textContent = t('cpuDesc', { app: pct(a.cpu) });
       drawChart(card.cpu.chart, hist.cpu.values, hist.appCpu.values, 100);
@@ -233,18 +246,23 @@
       card.mem.desc.textContent = t('memDesc', { used: bytes(s.memUsed), total: bytes(s.memTotal), app: bytes(a.mem) });
       drawChart(card.mem.chart, hist.mem.values, hist.appMem.values, 100);
 
-      const noCounters = (v) => v == null;
-      card.gpu.value.textContent = noCounters(s.gpu) ? (s.countersAvailable ? t('waitingData') : t('unavailable')) : pct(s.gpu);
-      card.gpu.desc.textContent = noCounters(s.gpu) && !s.countersAvailable ? t('unavailableDesc') : t('gpuDesc', { app: pct(a.gpu) });
+      // GPU, disco e rede: skeleton enquanto o coletor do Windows nao entrega a 1a leitura;
+      // "Indisponivel" so quando o Windows nao fornece o contador.
+      const counterCard = (c, v, valueText, descText) => {
+        const loading = v == null && s.countersAvailable;
+        setCardLoading(c, loading);
+        if (loading) return;
+        c.value.textContent = v == null ? t('unavailable') : valueText();
+        c.desc.textContent = v == null ? t('unavailableDesc') : descText();
+      };
+      counterCard(card.gpu, s.gpu, () => pct(s.gpu), () => t('gpuDesc', { app: pct(a.gpu) }));
       drawChart(card.gpu.chart, hist.gpu.values, hist.appGpu.values, 100);
 
-      card.disk.value.textContent = noCounters(s.diskActive) ? (s.countersAvailable ? t('waitingData') : t('unavailable')) : pct(s.diskActive);
-      card.disk.desc.textContent = noCounters(s.diskActive) && !s.countersAvailable ? t('unavailableDesc') : t('diskDesc', { rate: bytes(s.diskBps) });
+      counterCard(card.disk, s.diskActive, () => pct(s.diskActive), () => t('diskDesc', { rate: bytes(s.diskBps) }));
       drawChart(card.disk.chart, hist.disk.values, null, 100);
 
       const netMax = Math.max(64 * 1024, ...hist.rx.values.map((v) => v || 0), ...hist.tx.values.map((v) => v || 0)) * 1.15;
-      card.net.value.textContent = noCounters(s.netRx) ? (s.countersAvailable ? t('waitingData') : t('unavailable')) : bytes(s.netRx + s.netTx) + '/s';
-      card.net.desc.textContent = noCounters(s.netRx) && !s.countersAvailable ? t('unavailableDesc') : t('netDesc', { rx: bytes(s.netRx), tx: bytes(s.netTx) });
+      counterCard(card.net, s.netRx, () => bytes(s.netRx + s.netTx) + '/s', () => t('netDesc', { rx: bytes(s.netRx), tx: bytes(s.netTx) }));
       drawChart(card.net.chart, hist.rx.values, hist.tx.values, netMax);
 
       // contas: soma dos processos de cada conta (painel + janela de login, se aberta)
@@ -292,6 +310,7 @@
         groups.set(p.kind, gq);
       }
       const ORDER = ['main', 'ui', 'gpu', 'network', 'audio', 'other'];
+      internals.removeAttribute('aria-busy');
       internals.replaceChildren(...[...groups.values()].sort((x, y) => ORDER.indexOf(x.kind) - ORDER.indexOf(y.kind)).map((gq) => {
         const item = el('div', 'mon-proc');
         const txt = el('div', 'mon-proc-text');
@@ -306,6 +325,11 @@
     }
 
     renderTexts();
+    // Antes da 1a amostra: todos os cartoes e a tabela de contas em skeleton.
+    Object.values(card).forEach((c) => setCardLoading(c, true));
+    table.setAttribute('aria-busy', 'true');
+    accEmpty.hidden = true; // "nenhuma conta" so depois de saber, nunca durante o carregamento
+    tbody.appendChild(HubSkeleton.tableRows(Math.max(2, Math.min(5, ctx.getState().accounts.length)), { columns: 4, actions: 5 }));
     return {
       update,
       reset: () => winproc.reset(),

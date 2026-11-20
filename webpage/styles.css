@@ -226,7 +226,7 @@ kbd { display: inline-flex; align-items: center; height: 34px; padding: 0 12px; 
 }
 @media (max-width: 560px) {
   .hero { padding-top: 56px; }
-  .pill { flex-wrap: wrap; justify-content: center; padding: 10px 14px; border-radius: 24px; }
+  .pill { flex-wrap: wrap; justify-content: center; padding: 12px 16px; border-radius: 16px; } /* quebra em linhas: canto menor para nao encostar no texto */
   .banner, .banner-flip, .tile { padding: 24px; border-radius: var(--r-card); }
   .hero-shot { padding: 6px; border-radius: var(--r-card); }
   .hero-shot img { border-radius: calc(var(--r-card) - 6px); }

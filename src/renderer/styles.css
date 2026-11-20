@@ -513,3 +513,62 @@ body.resizing .splitter::after { width: 8px; height: 56px; background: var(--md-
 .wp-lock .ico { width: 18px; height: 18px; }
 .wp-more { margin-top: var(--space-2); }
 .wp-table .mon-row-head .mon-cell:last-child { justify-self: end; padding-right: var(--space-3); }
+
+/* =====================================================================
+   SKELETON: padrao de carregamento do sistema
+   Base unica (.sk) + um formato por componente (cartao de metrica, linha de tabela,
+   card de processo, painel de jogo). Construtores em skeleton.js.
+   ===================================================================== */
+:root {
+  --sk-base: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent);
+  --sk-shine: color-mix(in srgb, var(--md-sys-color-on-surface) 16%, transparent);
+  --sk-fill: linear-gradient(90deg, var(--sk-base) 0%, var(--sk-shine) 50%, var(--sk-base) 100%);
+}
+@keyframes sk-shimmer { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+
+.sk,
+.mon-card.is-loading .mon-card-value::after,
+.mon-card.is-loading .mon-card-desc::after,
+.mon-card.is-loading .chart {
+  background: var(--sk-fill);
+  background-size: 200% 100%;
+  animation: sk-shimmer 1.6s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sk, .mon-card.is-loading .mon-card-value::after, .mon-card.is-loading .mon-card-desc::after, .mon-card.is-loading .chart { animation: none; background: var(--sk-base); }
+}
+.sk-bar { display: block; max-width: 100%; border-radius: var(--md-sys-shape-corner-small); }
+.sk-dot { width: 24px; height: 24px; border-radius: var(--md-sys-shape-corner-full); }
+.sk-circle { width: 88px; height: 88px; border-radius: var(--md-sys-shape-corner-full); }
+.sk-tile { flex: 1; height: 56px; border-radius: var(--md-sys-shape-corner-medium); }
+.sk-stack { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
+.sk-end { align-items: flex-end; }
+.sk-acts { display: flex; justify-content: flex-end; gap: var(--space-3); padding-right: var(--space-2); }
+
+/* cartao de metrica do Monitor: o texto real fica invisivel (mantem a altura e e lido por leitor de tela) */
+.mon-card.is-loading .mon-card-value, .mon-card.is-loading .mon-card-desc { position: relative; color: transparent; }
+.mon-card.is-loading .mon-card-value::after { content: ""; position: absolute; left: 0; top: 16%; width: min(58%, 240px); height: 68%; border-radius: var(--md-sys-shape-corner-small); }
+.mon-card.is-loading .mon-card-desc::after { content: ""; position: absolute; left: 0; top: 4px; width: 78%; height: 12px; border-radius: var(--md-sys-shape-corner-small); }
+.mon-card.is-loading .chart { border-radius: var(--md-sys-shape-corner-medium); }
+.mon-card.is-loading .chart > * { display: none; }
+
+/* linha de tabela (contas e processos) */
+.sk-row { pointer-events: none; }
+
+/* card de processo interno */
+.sk-proc { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); min-height: 64px; }
+.sk-proc .sk-stack:first-child { flex: 1; }
+
+/* painel de jogo: cobre a area do jogo ate a 1a carga terminar */
+.sk-panel {
+  position: absolute; inset: 0; z-index: 1; display: flex; flex-direction: column; justify-content: space-between; gap: var(--space-4);
+  padding: var(--space-4); background: var(--md-sys-color-surface-container-low);
+}
+.sk-panel[hidden] { display: none; }
+.sk-panel-top { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); }
+.sk-panel-chips { display: flex; gap: var(--space-2); }
+.sk-panel-mid { display: flex; flex-direction: column; align-items: center; gap: var(--space-3); }
+.sk-panel-bottom { display: flex; gap: var(--space-3); }
+
+/* texto so para leitor de tela */
+.sr-only { position: absolute !important; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
