@@ -308,6 +308,50 @@
     return tile;
   }
 
+  // Linha da lateral: o item de navegacao + uma lixeira no canto (aparece ao passar o mouse ou com foco).
+  // Botao direito no item abre o menu de contexto (editar / remover).
+  function navRow(button, { removeTitle, onRemove, menu }) {
+    const row = el('div', 'nav-row');
+    const del = el('button', 'nav-del state'); del.type = 'button'; del.title = removeTitle;
+    del.setAttribute('aria-label', removeTitle);
+    del.appendChild(HubIcon('trash'));
+    del.addEventListener('click', (e) => { e.stopPropagation(); onRemove(); });
+    button.addEventListener('contextmenu', (e) => { e.preventDefault(); openMenu(e.clientX, e.clientY, menu); });
+    row.append(button, del);
+    return row;
+  }
+
+  // Menu de contexto (menu do M3): lista de acoes, fecha ao escolher, ao clicar fora, com Esc ou ao rolar.
+  const ctx = el('div', 'ctx-menu'); ctx.setAttribute('role', 'menu'); ctx.hidden = true;
+  document.body.appendChild(ctx);
+  function closeMenu() { ctx.hidden = true; ctx.replaceChildren(); }
+  function openMenu(x, y, items) {
+    ctx.replaceChildren();
+    for (const it of items) {
+      const b = el('button', 'ctx-item state' + (it.danger ? ' danger' : '')); b.type = 'button'; b.setAttribute('role', 'menuitem');
+      b.append(HubIcon(it.icon), el('span', null, it.label));
+      b.addEventListener('click', () => { closeMenu(); it.run(); });
+      ctx.appendChild(b);
+    }
+    ctx.hidden = false;
+    const r = ctx.getBoundingClientRect();
+    ctx.style.left = Math.min(x, innerWidth - r.width - 8) + 'px';
+    ctx.style.top = Math.min(y, innerHeight - r.height - 8) + 'px';
+    ctx.querySelector('button')?.focus();
+  }
+  document.addEventListener('pointerdown', (e) => { if (!ctx.hidden && !ctx.contains(e.target)) closeMenu(); });
+  document.addEventListener('keydown', (e) => {
+    if (ctx.hidden) return;
+    if (e.key === 'Escape') { e.stopPropagation(); closeMenu(); }
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      const items = [...ctx.querySelectorAll('button')], i = items.indexOf(document.activeElement);
+      items[(i + (e.key === 'ArrowDown' ? 1 : items.length - 1)) % items.length]?.focus();
+    }
+  }, true);
+  window.addEventListener('blur', closeMenu);
+  $('drawer').addEventListener('scroll', closeMenu);
+
   function renderGames() {
     const list = $('gameList');
     list.replaceChildren();
@@ -324,7 +368,14 @@
         if (screen !== 'games') setScreen('games');
         if (g.id !== S.prefs.activeGame || mix()) { focusId = null; commit((d) => { d.prefs.activeGame = g.id; d.prefs.activeMix = null; }); }
       });
-      list.appendChild(b);
+      list.appendChild(navRow(b, {
+        removeTitle: t('removeGameNamed', { name: g.name }),
+        onRemove: () => removeGame(g),
+        menu: [
+          { icon: 'edit', label: t('editGame'), run: () => editGame(g) },
+          { icon: 'trash', label: t('removeGameButton'), danger: true, run: () => removeGame(g) }
+        ]
+      }));
     }
   }
 
@@ -358,7 +409,14 @@
         if (screen !== 'games') setScreen('games');
         if (S.prefs.activeMix !== m.id) { focusId = null; commit((d) => { d.prefs.activeMix = m.id; }); }
       });
-      list.appendChild(b);
+      list.appendChild(navRow(b, {
+        removeTitle: t('removeMixNamed', { name: m.name }),
+        onRemove: () => removeMix(m),
+        menu: [
+          { icon: 'edit', label: t('editMix'), run: () => editMix(m) },
+          { icon: 'trash', label: t('mixDelete'), danger: true, run: () => removeMix(m) }
+        ]
+      }));
     }
     $('newMix').disabled = S.mixes.length >= 20;
   }
@@ -621,8 +679,24 @@
     });
   }
 
-  async function editGame() {
-    const g = game(); if (!g) return;
+  // Remove um jogo e as contas dele (com confirmacao). As sessoes das contas sao apagadas depois de salvo.
+  async function removeGame(g) {
+    const sure = await ask({ title: t('removeTitle', { name: g.name }), ok: t('remove'), danger: true,
+      extra: () => el('p', 'dialog-text', t('removeGameText', { count: accountsOf(g.id).length })) });
+    if (!sure) return;
+    const gone = accountsOf(g.id).map((a) => a.id);
+    if (gone.includes(focusId)) focusId = null;
+    await commit((d) => {
+      d.games = d.games.filter((x) => x.id !== g.id);
+      d.accounts = d.accounts.filter((a) => a.gameId !== g.id);
+      if (d.prefs.activeGame === g.id) d.prefs.activeGame = d.games[0]?.id ?? null; // outro jogo ativo continua ativo
+    });
+    for (const id of gone) hub.clearAccount(id);
+    toast(t('gameRemoved', { name: g.name }));
+  }
+
+  async function editGame(g = game()) {
+    if (!g) return;
     let removeIt = false;
     const v = await ask({
       title: t('editGame'), ok: t('save'),
@@ -640,19 +714,7 @@
       validate: (val) => (removeIt ? null : gameProblem(val))
     });
     if (!v) return;
-    if (removeIt) {
-      const sure = await ask({ title: t('removeTitle', { name: g.name }), ok: t('remove'), danger: true,
-        extra: () => el('p', 'dialog-text', t('removeGameText', { count: accountsOf(g.id).length })) });
-      if (!sure) return;
-      const gone = accountsOf(g.id).map((a) => a.id);
-      await commit((d) => {
-        d.games = d.games.filter((x) => x.id !== g.id);
-        d.accounts = d.accounts.filter((a) => a.gameId !== g.id);
-        d.prefs.activeGame = d.games[0]?.id ?? null;
-      });
-      for (const id of gone) hub.clearAccount(id);
-      return;
-    }
+    if (removeIt) return removeGame(g);
     commit((d) => {
       const x = d.games.find((y) => y.id === g.id);
       if (new URL(x.url).origin !== new URL(v.url).origin) { x.icon = null; iconTried.delete(x.id); } // outro site: outro icone
@@ -702,18 +764,21 @@
     });
   }
 
-  function editMix() {
-    const m = mix(); if (!m) return;
+  async function removeMix(m) {
+    const sure = await ask({ title: t('mixDeleteTitle', { name: m.name }), ok: t('mixDelete'), danger: true,
+      extra: () => el('p', 'dialog-text', t('mixDeleteText')) });
+    if (!sure) return;
+    if (S.prefs.activeMix === m.id) focusId = null;
+    await commit((d) => { d.mixes = d.mixes.filter((x) => x.id !== m.id); if (d.prefs.activeMix === m.id) d.prefs.activeMix = null; });
+    toast(t('mixRemoved', { name: m.name }));
+  }
+
+  function editMix(m = mix()) {
+    if (!m) return;
     HubMixEditor.open({
       state: S, mix: m,
       onSave: ({ name, accounts }) => commit((d) => { const r = d.mixes.find((x) => x.id === m.id); if (r) { r.name = name; r.accounts = accounts; } }),
-      onDelete: async () => {
-        const sure = await ask({ title: t('mixDeleteTitle', { name: m.name }), ok: t('mixDelete'), danger: true,
-          extra: () => el('p', 'dialog-text', t('mixDeleteText')) });
-        if (!sure) return;
-        focusId = null;
-        commit((d) => { d.mixes = d.mixes.filter((x) => x.id !== m.id); d.prefs.activeMix = null; });
-      }
+      onDelete: () => removeMix(m)
     });
   }
 
