@@ -38,7 +38,7 @@ npm run dist:store     # -> dist\IdleHub-0.1.0-store.appx (x64)
 | Propriedades | Categoria **Utilitários e ferramentas**. Política de privacidade: `https://iuryfranca.github.io/idlehub/privacidade.html`. Site: `https://iuryfranca.github.io/idlehub/`. Suporte: `https://github.com/iuryfranca/idlehub/issues` |
 | Classificação etária | Questionário IARC: o app não tem conteúdo próprio, chat, compras nem coleta de dados; ele abre sites que o usuário escolhe (marque "acesso irrestrito à internet / navegador") |
 | Pacotes | Envie `dist\IdleHub-<versão>-store.appx` |
-| Listagens da Store | Português (Brasil), inglês e espanhol: textos abaixo. Capturas: `docs/store/screens/` (1600×856, acima do mínimo de 1366×768) |
+| Listagens da Store | Português (Brasil), inglês e espanhol: textos abaixo. Capturas (aba **Área de trabalho**, 5 por idioma: grid, spotlight, mix, monitor, hibernate): pt-BR em `docs/store/screens/`, inglês em `docs/store/screens/en/`, espanhol em `docs/store/screens/es/` (1600×856, acima do mínimo de 1366×768). Evite `hub-dark.png` (logos de terceiros). Refazer: `SHOTS_LANG=en SHOTS_ONLY=grid-dark,... npm run screens`. |
 | Opções de envio → Notas para certificação | Texto abaixo |
 
 ### Notas para a certificação (em inglês)
