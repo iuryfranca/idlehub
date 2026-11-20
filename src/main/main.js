@@ -14,6 +14,7 @@ const { fetchIcon } = require('./favicon');
 const IS_DEV = !app.isPackaged;
 const RENDERER = path.resolve(__dirname, '..', 'renderer');
 const PRELOAD = path.resolve(__dirname, '..', 'preload.js');
+const ICON = path.resolve(__dirname, '..', '..', 'build', process.platform === 'win32' ? 'icon.ico' : 'icon.png');
 
 // Em desenvolvimento, permite apontar os dados para outra pasta (testes automaticos).
 if (IS_DEV && process.env.IDLEHUB_USERDATA) app.setPath('userData', path.resolve(process.env.IDLEHUB_USERDATA));
@@ -22,6 +23,8 @@ const hasLock = app.requestSingleInstanceLock();
 if (!hasLock) app.quit();
 
 app.userAgentFallback = chromeLikeUserAgent(app.userAgentFallback);
+// Identidade propria no Windows: a barra de tarefas agrupa e mostra o icone do IdleHub, nao o do Electron.
+if (process.platform === 'win32') app.setAppUserModelId('IdleHub');
 
 /** @type {BrowserWindow|null} */
 let mainWindow = null;
@@ -135,6 +138,7 @@ function applyMode(mode) { nativeTheme.themeSource = THEME_SOURCE[mode] || 'syst
 function openMainWindow() {
   mainWindow = new BrowserWindow({
     title: 'IdleHub',
+    icon: ICON,
     width: 1440,
     height: 900,
     minWidth: 900,

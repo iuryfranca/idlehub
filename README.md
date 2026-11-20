@@ -48,6 +48,7 @@ git clone https://github.com/iuryfranca/idlehub.git   # ou "Download ZIP" na pá
 cd idlehub
 npm install            # baixa o Electron (uma vez)
 npm start              # ou dois cliques em "Abrir IdleHub.bat"
+npm run atalho         # opcional: cria o atalho "IdleHub" na área de trabalho, com o ícone do app
 ```
 
 ## O que já faz
@@ -155,6 +156,9 @@ src/renderer/           interface: index.html, styles.css, app.js, layout.js (c�
 src/renderer/m3/        tokens do Material 3 (tokens.css), cores geradas (colors.css) e a fonte Roboto Flex
 scripts/build-theme.mjs gera colors.css a partir das cores base (npm run theme)
 scripts/capture-screens.js  refaz as capturas do site e do vídeo (npm run screens)
+scripts/build-icon.js   gera build/icon.ico e build/icon.png a partir de build/icon.svg (npm run icon)
+scripts/criar-atalho.ps1  atalho na área de trabalho com o ícone (npm run atalho)
+build/                  ícone do app (a marca do site: 4 painéis numa janela, com a faixa Aurora)
 webpage/                página de apresentação (site estático, sem scripts nem recursos externos)
 test/                   testes de store, layout, idioma, user-agent, contraste das cores, monitor e hub de jogos (node --test)
 ```

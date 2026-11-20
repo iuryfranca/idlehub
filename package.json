@@ -9,7 +9,9 @@
     "start": "electron .",
     "test": "node --test \"test/*.test.js\"",
     "theme": "node scripts/build-theme.mjs",
-    "screens": "node scripts/capture-screens.js"
+    "screens": "node scripts/capture-screens.js",
+    "icon": "electron scripts/build-icon.js",
+    "atalho": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/criar-atalho.ps1"
   },
   "license": "MIT",
   "devDependencies": {
