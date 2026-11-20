@@ -97,3 +97,8 @@ body {
 
 .no-scrollbar { scrollbar-width: none; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* Balanco do monstro na replica do app: continuo, so transform (composto na GPU). */
+@keyframes mock-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+.mock-bob { animation: mock-bob 1.4s ease-in-out infinite; will-change: transform; }
+@media (prefers-reduced-motion: reduce) { .mock-bob { animation: none; } }

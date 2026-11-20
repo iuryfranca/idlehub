@@ -28,6 +28,9 @@ const SPACES: Space[] = [
     { id: 'f1', name: 'Main', game: 'forja' }, { id: 'r2', name: 'Farm 01', game: 'reino' }] }
 ];
 
+// Relogio dos jogos: um passo a cada TICK ms. A barra de vida anda exatamente nesse ritmo (sem pausa entre passos).
+const TICK = 650;
+
 const mono = (s: string) => s.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
 const seedOf = (id: string) => [...id].reduce((a, c) => a + c.charCodeAt(0), 0);
 
@@ -38,7 +41,8 @@ function GamePanel({ acc, tick, index, featured, mixed }: { acc: Acc; tick: numb
   const cycle = 14 + (s % 6);
   const phase = (tick + s) % cycle;
   const hp = Math.max(0, 100 - (phase / (cycle - 1)) * 100);
-  const foe = g.foe[Math.floor((tick + s) / cycle) % g.foe.length];
+  const round = Math.floor((tick + s) / cycle); // cada monstro novo = uma rodada
+  const foe = g.foe[round % g.foe.length];
   const gold = (((s * 37) % 900) + tick * (3 + (s % 5))) / 10;
   const level = 8 + (s % 30) + Math.floor(tick / 40);
   return (
@@ -64,16 +68,15 @@ function GamePanel({ acc, tick, index, featured, mixed }: { acc: Acc; tick: numb
             <span className="rounded-full border border-[#6b5a33] bg-black/40 px-1.5 py-px font-sans font-bold normal-case tracking-normal text-[#ffd77a] tabular-nums">● {gold.toFixed(1)} K</span>
           </div>
           <div className="flex flex-col items-center gap-1">
-            <motion.div
-              key={foe}
-              initial={{ scale: 0.4, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1, y: [0, -3, 0] }}
-              transition={{ scale: { type: 'spring', stiffness: 380, damping: 18 }, y: { repeat: Infinity, duration: 1.4, ease: 'easeInOut' } }}
-              className={`h-7 w-9 rounded-[50%_50%_44%_44%] bg-gradient-to-br ${g.blob} shadow-[0_8px_14px_rgba(0,0,0,.5)]`}
-            />
+            {/* surge com mola quando o monstro muda; o balanco e CSS continuo (nao reinicia a cada passo do relogio) */}
+            <motion.div key={round} initial={{ scale: 0.4, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 380, damping: 18 }}>
+              <div className={`mock-bob h-7 w-9 rounded-[50%_50%_44%_44%] bg-gradient-to-br ${g.blob} shadow-[0_8px_14px_rgba(0,0,0,.5)]`} />
+            </motion.div>
             <span className="truncate text-[10px] font-bold">{foe}</span>
             <div className="h-1.5 w-3/4 overflow-hidden rounded-full border border-[#6b5a33] bg-black/50">
-              <div className="h-full bg-gradient-to-r from-[#d94b3b] to-[#f08a4b] transition-[width] duration-500 ease-linear" style={{ width: `${hp}%` }} />
+              {/* scaleX (so composicao, sem refazer layout) no mesmo ritmo do relogio; key por rodada: renasce cheia sem animar para tras */}
+              <div key={round} className="h-full origin-left bg-gradient-to-r from-[#d94b3b] to-[#f08a4b]"
+                style={{ transform: `scaleX(${hp / 100})`, transition: phase === 0 ? 'none' : `transform ${TICK}ms linear` }} />
             </div>
           </div>
           <div className="flex gap-1 font-sans text-[8px]">
@@ -108,7 +111,7 @@ export function AppMock() {
   useEffect(() => {
     const io = new IntersectionObserver(([e]) => { visible.current = e.isIntersecting; });
     io.observe(root.current!);
-    const id = setInterval(() => { if (visible.current && !reduce) setTick((n) => n + 1); }, 650);
+    const id = setInterval(() => { if (visible.current && !reduce) setTick((n) => n + 1); }, TICK);
     return () => { clearInterval(id); io.disconnect(); };
   }, [reduce]);
 
@@ -135,9 +138,9 @@ export function AppMock() {
         <Mark className="size-3.5" /><span>IdleHub</span>
         <span className="ml-auto flex items-center gap-4"><Minus className="size-3" /><Square className="size-2.5" /><X className="size-3" /></span>
       </div>
-      <div className="flex h-[340px] sm:h-[440px] lg:h-[520px]">
+      <div className="flex h-[360px] sm:h-[480px] lg:h-[600px] xl:h-[680px]">
         {/* lateral */}
-        <aside className="hidden w-48 shrink-0 flex-col gap-1 bg-s1 p-2.5 text-[11px] md:flex">
+        <aside className="hidden w-48 shrink-0 flex-col gap-1 bg-s1 p-2.5 text-[11px] md:flex xl:w-56 xl:text-xs">
           <div className="mb-1 flex items-center gap-2 px-1.5 py-1 text-sm font-medium text-on-surface"><PanelLeft className="size-3.5 text-on-surface-variant" /> IdleHub</div>
           <div className="mb-2 flex h-9 w-fit items-center gap-2 rounded-lg bg-primary-container px-3 font-medium text-on-primary-container shadow-sm">+ <span>{t('mockAddGame')}</span></div>
           <div className="px-2 pb-1 pt-2 text-[10px] font-medium text-on-surface-variant">{t('mockGames')}</div>
@@ -167,7 +170,7 @@ export function AppMock() {
               {[false, true].map((f) => (
                 <button key={String(f)} role="radio" aria-checked={featured === f} onClick={() => { setFeatured(f); stopAuto(); }}
                   className="state relative flex items-center gap-1 rounded-full px-3 py-1 text-on-surface">
-                  {featured === f && <motion.span layoutId="mock-seg" className="absolute inset-0 -z-10 rounded-full bg-secondary-container" transition={{ type: 'spring', stiffness: 500, damping: 38 }} />}
+                  {featured === f && <motion.span layoutId="mock-seg" layoutDependency={featured} className="absolute inset-0 -z-10 rounded-full bg-secondary-container" transition={{ type: 'spring', stiffness: 500, damping: 38 }} />}
                   {f ? <Star className="size-3" /> : <LayoutGrid className="size-3" />}
                   <span className="hidden sm:inline">{f ? t('mockFeatured') : t('mockGrid')}</span>
                 </button>
@@ -182,6 +185,7 @@ export function AppMock() {
                   <motion.div
                     key={space.id + acc.id}
                     layout={!reduce}
+                    layoutDependency={`${space.id}-${featured}`}
                     initial={{ opacity: 0, scale: 0.94 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.94 }}
@@ -204,7 +208,7 @@ export function AppMock() {
 function SideItem({ active, onClick, label, count, tile }: { active: boolean; onClick: () => void; label: string; count: number; tile: React.ReactNode }) {
   return (
     <button onClick={onClick} className={`state relative flex h-9 items-center gap-2 rounded-full px-2 text-left ${active ? 'font-semibold text-on-secondary-container' : 'text-on-surface-variant'}`}>
-      {active && <motion.span layoutId="mock-nav" className="absolute inset-0 -z-10 rounded-full bg-secondary-container" transition={{ type: 'spring', stiffness: 500, damping: 40 }} />}
+      {active && <motion.span layoutId="mock-nav" layoutDependency={label} className="absolute inset-0 -z-10 rounded-full bg-secondary-container" transition={{ type: 'spring', stiffness: 500, damping: 40 }} />}
       {tile}
       <span className="flex-1 truncate">{label}</span>
       <span className="text-[10px]">{count}</span>
