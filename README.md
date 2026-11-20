@@ -146,6 +146,8 @@ src/renderer/           interface: index.html, styles.css, app.js, layout.js (c�
                         monitor-ui.js (tela Monitor e gráficos), winproc-ui.js (processos do Windows)
 src/renderer/m3/        tokens do Material 3 (tokens.css), cores geradas (colors.css) e a fonte Roboto Flex
 scripts/build-theme.mjs gera colors.css a partir das cores base (npm run theme)
+scripts/capture-screens.js  refaz as capturas do site e do vídeo (npm run screens)
+webpage/                página de apresentação (site estático, sem scripts nem recursos externos)
 test/                   testes de store, layout, idioma, user-agent, contraste das cores e monitor (node --test)
 ```
 
