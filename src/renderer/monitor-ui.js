@@ -77,13 +77,18 @@
 
     // ---------- estrutura ----------
     root.replaceChildren();
-    const head = el('div', 'mon-head');
-    const headText = el('div');
-    const hTitle = el('h2', 'mon-title');
-    const hInfo = el('p', 'mon-sub');
-    headText.append(hTitle, hInfo);
-    const live = el('p', 'mon-live');
-    head.append(headText, live);
+    // Cabecalho de secao (nivel abaixo do titulo da pagina na barra superior):
+    // icone + titulo na cor primaria + divisoria + detalhes em chips a direita.
+    function sectionHeader(icon) {
+      const box = el('div', 'mon-section');
+      const title = el('h2', 'mon-title');
+      const meta = el('div', 'mon-meta');
+      const ico = HubIcon(icon); ico.classList.add('mon-section-icon');
+      box.append(ico, title, el('span', 'mon-rule'), meta);
+      return { box, title, meta };
+    }
+    const chip = (text) => el('span', 'mon-chip', text);
+    const hMachine = sectionHeader('chip');
 
     const cards = el('div', 'mon-cards');
     const CARD_DEFS = [
@@ -105,10 +110,7 @@
       card[def.id] = { box, label, value, desc, chart: c, legend };
     }
 
-    const accHead = el('div', 'mon-section');
-    const accTitle = el('h2', 'mon-title');
-    const accSub = el('p', 'mon-sub');
-    accHead.append(accTitle, accSub);
+    const hAccounts = sectionHeader('panels');
     const table = el('div', 'mon-table');
     table.setAttribute('role', 'table');
     const thead = el('div', 'mon-row mon-row-head');
@@ -119,14 +121,16 @@
     table.append(thead, tbody);
     const accEmpty = el('p', 'mon-empty');
 
-    const inHead = el('div', 'mon-section');
-    const inTitle = el('h2', 'mon-title');
-    const inSub = el('p', 'mon-sub');
-    inHead.append(inTitle, inSub);
+    const hInternals = sectionHeader('layers');
     const internals = el('div', 'mon-internals');
-    const foot = el('p', 'mon-foot');
+    const foot = el('footer', 'mon-foot');
+    const live = el('p');
+    const cost = el('p');
+    const footText = el('div');
+    footText.append(live, cost);
+    foot.append(HubIcon('info'), footText);
 
-    root.append(head, cards, accHead, table, accEmpty, inHead, internals, foot);
+    root.append(hMachine.box, cards, hAccounts.box, table, accEmpty, hInternals.box, internals, foot);
 
     // ---------- linhas das contas (criadas uma vez, atualizadas no lugar) ----------
     const rows = new Map();
@@ -180,18 +184,18 @@
 
     // ---------- textos (idioma) ----------
     function renderTexts() {
-      hTitle.textContent = t('machine');
+      hMachine.title.textContent = t('machine');
       live.textContent = t('liveNote');
       card.cpu.label.textContent = t('cpu');
       card.mem.label.textContent = t('memory');
       card.gpu.label.textContent = t('gpu');
       card.disk.label.textContent = t('disk');
       card.net.label.textContent = t('network');
-      accTitle.textContent = t('appAccounts');
+      hAccounts.title.textContent = t('appAccounts');
       cols.forEach((c) => { c.textContent = t(c.dataset.key); });
       accEmpty.textContent = t('noAccountsMonitor');
-      inTitle.textContent = t('internals');
-      inSub.textContent = t('internalsText');
+      hInternals.title.textContent = t('internals');
+      hInternals.meta.replaceChildren(el('span', 'mon-meta-text', t('internalsText')));
       for (const [key, c] of Object.entries(card)) {
         const two = key !== 'disk';
         c.legend.replaceChildren(
@@ -217,7 +221,7 @@
         hist.rx.push(s.netRx); hist.tx.push(s.netTx);
       }
 
-      hInfo.textContent = t('machineInfo', { cpu: s.cpuModel, cores: s.cores, ram: bytes(s.memTotal) });
+      hMachine.meta.replaceChildren(chip(s.cpuModel), chip(t('threads', { n: s.cores })), chip(t('ramTotal', { ram: bytes(s.memTotal) })));
 
       card.cpu.value.textContent = pct(s.cpu);
       card.cpu.desc.textContent = t('cpuDesc', { app: pct(a.cpu) });
@@ -275,7 +279,7 @@
         r.mute.setAttribute('aria-pressed', String(acc.muted));
         r.mute.title = acc.muted ? t('accountMuted') : t('muteAccount');
       }
-      accSub.textContent = t('accountsSummary', { total: state.accounts.length, awake, asleep: state.accounts.length - awake });
+      hAccounts.meta.replaceChildren(chip(t('chipTotal', { n: state.accounts.length })), chip(t('chipAwake', { n: awake })), chip(t('chipAsleep', { n: state.accounts.length - awake })));
 
       // processos internos (tudo que nao e conta)
       const groups = new Map();
@@ -295,7 +299,7 @@
         return item;
       }));
 
-      foot.textContent = t('monitorCost', { ms: nf(2).format(sample.costMs) });
+      cost.textContent = t('monitorCost', { ms: nf(2).format(sample.costMs) });
     }
 
     renderTexts();

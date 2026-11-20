@@ -349,12 +349,34 @@ body.resizing .splitter::after { width: 8px; height: 56px; background: var(--md-
   position: relative; z-index: 10; overflow: auto; background: var(--md-sys-color-surface);
   padding: var(--space-2) var(--space-6) var(--space-6); user-select: text;
 }
-.mon-head, .mon-section { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap; margin: var(--space-4) 0 var(--space-3); }
-.mon-section { flex-direction: column; align-items: flex-start; gap: var(--space-1); margin-top: var(--space-6); }
-.mon-title { margin: 0; font: var(--md-sys-typescale-title-large); color: var(--md-sys-color-on-surface); }
-.mon-sub, .mon-live, .mon-foot { margin: 0; font: var(--md-sys-typescale-body-medium); letter-spacing: var(--md-sys-typescale-body-medium-tracking); color: var(--md-sys-color-on-surface-variant); }
-.mon-live { max-width: 520px; text-align: right; font: var(--md-sys-typescale-body-small); }
-.mon-foot { margin-top: var(--space-6); font: var(--md-sys-typescale-body-small); }
+/* Hierarquia: o titulo da PAGINA e o da barra superior (title-large + subtitulo).
+   Cada SECAO e um nivel abaixo: menor, na cor primaria, com icone, divisoria e detalhes em chips. */
+.mon-section {
+  display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap;
+  margin: var(--space-6) 0 var(--space-4);
+}
+.mon-section:first-child { margin-top: var(--space-4); }
+.mon-section-icon { width: 20px; height: 20px; color: var(--md-sys-color-primary); }
+.mon-title {
+  margin: 0; font: var(--md-sys-typescale-title-medium); letter-spacing: var(--md-sys-typescale-title-medium-tracking);
+  color: var(--md-sys-color-primary);
+}
+.mon-rule { flex: 1; min-width: var(--space-6); height: 1px; background: var(--md-sys-color-outline-variant); }
+.mon-meta { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+.mon-chip {
+  display: inline-flex; align-items: center; height: 28px; padding: 0 var(--space-3);
+  border: 1px solid var(--md-sys-color-outline-variant); border-radius: var(--md-sys-shape-corner-small);
+  font: var(--md-sys-typescale-label-medium); letter-spacing: var(--md-sys-typescale-label-medium-tracking);
+  color: var(--md-sys-color-on-surface-variant); white-space: nowrap;
+}
+.mon-meta-text { font: var(--md-sys-typescale-body-small); letter-spacing: var(--md-sys-typescale-body-small-tracking); color: var(--md-sys-color-on-surface-variant); }
+.mon-foot {
+  display: flex; align-items: flex-start; gap: var(--space-3); margin-top: var(--space-6); padding: var(--space-3) var(--space-4);
+  border-radius: var(--md-sys-shape-corner-medium); background: var(--md-sys-color-surface-container-low);
+  color: var(--md-sys-color-on-surface-variant);
+}
+.mon-foot .ico { width: 20px; height: 20px; flex: none; }
+.mon-foot p { margin: 0; font: var(--md-sys-typescale-body-small); letter-spacing: var(--md-sys-typescale-body-small-tracking); }
 
 /* Cards: auto-fit ocupa a largura toda (5 lado a lado em tela larga) e quebra em grade (3, 2, 1 por linha) ao estreitar.
    Cada card e um container: numero, grafico e espacamento acompanham a largura do proprio card (unidade cqi). */
