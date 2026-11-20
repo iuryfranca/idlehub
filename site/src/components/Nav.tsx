@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { LANGS, useI18n } from '../i18n';
 import { useTheme } from '../theme';
 import { REPO, base } from '../links';
-import { Github, Mark } from './ui';
+import { Github, Mark, replay } from './ui';
 
 export function Nav({ home = true }: { home?: boolean }) {
   const { t, lang, setLang } = useI18n();
@@ -31,7 +31,7 @@ export function Nav({ home = true }: { home?: boolean }) {
         </a>
         <div className="hidden items-center gap-1 md:flex">
           {links.map(([h, label]) => (
-            <a key={h} href={link(h)} className="state rounded-full px-3 py-2 text-sm text-on-surface-variant transition-colors hover:text-on-surface">{label}</a>
+            <a key={h} href={link(h)} onClick={() => home && replay(h.slice(1))} className="state rounded-full px-3 py-2 text-sm text-on-surface-variant transition-colors hover:text-on-surface">{label}</a>
           ))}
         </div>
         <div className="ml-auto flex items-center gap-1">
@@ -52,7 +52,7 @@ export function Nav({ home = true }: { home?: boolean }) {
             </motion.span>
           </button>
           <a href={REPO} aria-label="GitHub" className="state hidden size-10 place-items-center rounded-full text-on-surface-variant sm:grid"><Github className="size-5" /></a>
-          <a href={link('#baixar')} className="state ml-1 rounded-full bg-on-surface px-4 py-2 text-sm font-medium text-surface transition-transform active:scale-95">{t('navDownload')}</a>
+          <a href={link('#baixar')} onClick={() => home && replay('baixar')} className="state ml-1 rounded-full bg-on-surface px-4 py-2 text-sm font-medium text-surface transition-transform active:scale-95">{t('navDownload')}</a>
           <button aria-label="Menu" aria-expanded={open} onClick={() => setOpen((o) => !o)} className="state grid size-10 place-items-center rounded-full text-on-surface md:hidden">
             {open ? <X className="size-5" /> : <Menu className="size-5" />}
           </button>
@@ -65,7 +65,7 @@ export function Nav({ home = true }: { home?: boolean }) {
             transition={{ duration: 0.22, ease: [0.2, 0, 0, 1] }}
             className="absolute inset-x-3 top-[4.5rem] rounded-xl border border-outline-variant/70 bg-s1/95 p-3 shadow-2xl shadow-black/30 backdrop-blur-xl md:hidden">
             {links.map(([h, label]) => (
-              <a key={h} href={link(h)} onClick={() => setOpen(false)} className="state block rounded-2xl px-4 py-3 text-on-surface">{label}</a>
+              <a key={h} href={link(h)} onClick={() => { setOpen(false); if (home) replay(h.slice(1)); }} className="state block rounded-2xl px-4 py-3 text-on-surface">{label}</a>
             ))}
             <a href={REPO} className="state flex items-center gap-2 rounded-2xl px-4 py-3 text-on-surface"><Github className="size-4" /> GitHub</a>
             <div className="mt-2 flex items-center justify-between border-t border-outline-variant/60 px-2 pt-3">

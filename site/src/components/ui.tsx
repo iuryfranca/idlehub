@@ -1,18 +1,48 @@
-import { motion, useReducedMotion, type HTMLMotionProps } from 'motion/react';
-import { useRef, type ReactNode, type PointerEvent } from 'react';
+import { motion, useAnimationControls, useInView, useReducedMotion, type HTMLMotionProps } from 'motion/react';
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode, type PointerEvent } from 'react';
 
-// Surge ao entrar na tela: sobe um pouco e sai do desfoque.
+// ---------- "Replay": refaz as animacoes de uma secao ----------
+// Os links do menu disparam replay('privacidade') etc.; a secao (ReplayScope) incrementa um contador e
+// tudo dentro dela que anima (Reveal, contadores, checklist) roda de novo, sem desmontar as demonstracoes.
+const REPLAY_EVENT = 'idlehub:replay';
+export const replay = (id: string) => window.dispatchEvent(new CustomEvent(REPLAY_EVENT, { detail: id }));
+const ReplayCtx = createContext(0);
+export const useReplayTick = () => useContext(ReplayCtx);
+
+export function ReplayScope({ id, children }: { id: string; children: ReactNode }) {
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    const on = (e: Event) => { if ((e as CustomEvent).detail === id) setTick((n) => n + 1); };
+    window.addEventListener(REPLAY_EVENT, on);
+    return () => window.removeEventListener(REPLAY_EVENT, on);
+  }, [id]);
+  return <ReplayCtx.Provider value={tick}>{children}</ReplayCtx.Provider>;
+}
+
+// Surge ao entrar na tela (toda vez que entra, nao so na primeira): sobe um pouco e sai do desfoque.
+// Num replay da secao, volta ao estado escondido e anima de novo quando estiver visivel.
 export function Reveal({ children, delay = 0, y = 24, className, ...rest }: { children: ReactNode; delay?: number; y?: number; className?: string } & HTMLMotionProps<'div'>) {
   const reduce = useReducedMotion();
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { margin: '-80px' });
+  const controls = useAnimationControls();
+  const tick = useReplayTick();
+  const hidden = { opacity: 0, y, filter: 'blur(10px)' };
+  const shown = { opacity: 1, y: 0, filter: 'blur(0px)', transition: { duration: 0.7, delay, ease: [0.05, 0.7, 0.1, 1] as const } };
+  useEffect(() => {
+    if (reduce) { controls.set(shown); return; }
+    if (inView) controls.start(shown); else controls.set(hidden);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inView, reduce]);
+  useEffect(() => {
+    if (!tick || reduce) return;
+    controls.set(hidden);
+    // o menu rola suavemente ate a secao: se ja estiver visivel, anima logo; senao, o efeito acima anima ao chegar
+    if (inView) requestAnimationFrame(() => controls.start(shown));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tick]);
   return (
-    <motion.div
-      className={className}
-      initial={reduce ? false : { opacity: 0, y, filter: 'blur(10px)' }}
-      whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-      viewport={{ once: true, margin: '-80px' }}
-      transition={{ duration: 0.7, delay, ease: [0.05, 0.7, 0.1, 1] }}
-      {...rest}
-    >
+    <motion.div ref={ref} className={className} initial={reduce ? false : hidden} animate={controls} {...rest}>
       {children}
     </motion.div>
   );

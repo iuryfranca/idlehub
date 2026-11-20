@@ -3,24 +3,36 @@ import { ArrowRight, Check, Copy, Download, ShieldCheck, Store, Terminal } from 
 import { useEffect, useRef, useState } from 'react';
 import { useI18n } from '../i18n';
 import { CLONE, DOWNLOAD, ISSUES, RELEASES, REPO, STORE, STORE_LIVE, base } from '../links';
-import { Card, Github, Mark, Reveal, SectionHead, WindowsGlyph } from './ui';
+import { Card, Github, Mark, ReplayScope, Reveal, SectionHead, WindowsGlyph, useReplayTick } from './ui';
 
 function CountUp({ to, suffix = '' }: { to: number; suffix?: string }) {
   const ref = useRef<HTMLSpanElement>(null);
-  const inView = useInView(ref, { once: true });
+  const inView = useInView(ref, { amount: 0.6 });
+  const tick = useReplayTick();
+  // conta de cima para baixo nos zeros (100 -> 0) e de baixo para cima no resto: o zero "chega" com movimento
+  const from = to === 0 ? 100 : 0;
   useEffect(() => {
-    if (!inView) return;
-    // conta de cima para baixo nos zeros (100 -> 0) e de baixo para cima no resto: o zero "chega" com movimento
-    const from = to === 0 ? 100 : 0;
-    const c = animate(from, to, { duration: 1.4, ease: [0.2, 0, 0, 1], onUpdate: (v) => { if (ref.current) ref.current.textContent = Math.round(v) + suffix; } });
+    const show = (v: number) => { if (ref.current) ref.current.textContent = Math.round(v) + suffix; };
+    if (!inView) { show(from); return; } // fora da tela volta ao inicio: conta de novo toda vez que aparece
+    const c = animate(from, to, { duration: 1.4, ease: [0.2, 0, 0, 1], onUpdate: show });
     return () => c.stop();
-  }, [inView, to, suffix]);
+  }, [inView, tick, to, from, suffix]);
   return <span ref={ref}>{to}{suffix}</span>;
 }
 
 export function PrivacySection() {
   const { t } = useI18n();
   const items = [t('privItem1'), t('privItem2'), t('privItem3'), t('privItem4')];
+  return (
+    <ReplayScope id="privacidade">
+    <PrivacyBody items={items} />
+    </ReplayScope>
+  );
+}
+
+function PrivacyBody({ items }: { items: string[] }) {
+  const { t } = useI18n();
+  const tick = useReplayTick();
   return (
     <section id="privacidade" className="relative scroll-mt-24 overflow-hidden py-24">
       <div aria-hidden className="dots absolute inset-0 [mask-image:radial-gradient(ellipse_at_center,black,transparent_70%)]" />
@@ -39,9 +51,9 @@ export function PrivacySection() {
         <Reveal className="mx-auto mt-10 max-w-2xl">
           <ul className="flex flex-col gap-3">
             {items.map((it, i) => (
-              <motion.li key={it} initial={{ opacity: 0, x: -12 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.15 + i * 0.12 }}
+              <motion.li key={`${it}-${tick}`} initial={{ opacity: 0, x: -12 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ amount: 0.8 }} transition={{ delay: 0.15 + i * 0.12 }}
                 className="flex items-center gap-3 rounded-2xl bg-s1 px-4 py-3 text-on-surface">
-                <motion.span initial={{ scale: 0 }} whileInView={{ scale: 1 }} viewport={{ once: true }} transition={{ delay: 0.35 + i * 0.12, type: 'spring', stiffness: 500, damping: 18 }}
+                <motion.span initial={{ scale: 0 }} whileInView={{ scale: 1 }} viewport={{ amount: 0.8 }} transition={{ delay: 0.35 + i * 0.12, type: 'spring', stiffness: 500, damping: 18 }}
                   className="grid size-7 shrink-0 place-items-center rounded-full bg-[#76daa1] text-[#003920]"><Check className="size-4" strokeWidth={3} /></motion.span>
                 {it}
               </motion.li>
@@ -73,6 +85,10 @@ function CopyBlock() {
 }
 
 export function DownloadSection() {
+  return <ReplayScope id="baixar"><DownloadBody /></ReplayScope>;
+}
+
+function DownloadBody() {
   const { t } = useI18n();
   return (
     <section id="baixar" className="relative mx-auto max-w-6xl scroll-mt-24 px-4 py-24">

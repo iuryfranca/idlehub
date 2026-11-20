@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { LANGS, useI18n } from '../i18n';
 import { THEME_NAMES, themeColors, useTheme } from '../theme';
 import { GAMES } from './AppMock';
-import { Card, Reveal, SectionHead } from './ui';
+import { Card, ReplayScope, Reveal, SectionHead } from './ui';
 
 function CardHead({ icon, title, text }: { icon: React.ReactNode; title: string; text: string }) {
   return (
@@ -310,6 +310,7 @@ function KeysDemo() {
 export function Features() {
   const { t } = useI18n();
   return (
+    <ReplayScope id="recursos">
     <section id="recursos" className="relative mx-auto max-w-6xl scroll-mt-24 px-4 py-24">
       <SectionHead kicker={t('featKicker')} title={t('featTitle')} sub={t('featSub')} />
       <div className="grid gap-4 md:grid-cols-6">
@@ -323,5 +324,6 @@ export function Features() {
         <Reveal className="md:col-span-3" delay={0.05}><Card className="h-full"><CardHead icon={<Keyboard className="size-5" />} title={t('keysTitle')} text={t('keysText')} /><KeysDemo /></Card></Reveal>
       </div>
     </section>
+    </ReplayScope>
   );
 }

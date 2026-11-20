@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useI18n } from '../i18n';
 import { base } from '../links';
 import { VIDEOS, type Video } from '../videos';
-import { Mark, Reveal, SectionHead } from './ui';
+import { Mark, ReplayScope, Reveal, SectionHead } from './ui';
 
 // Quadro 16:9: o video quando existir; senao, um placeholder animado com o nome do recurso.
 function Frame({ video }: { video: Video }) {
@@ -49,6 +49,7 @@ export function Videos() {
   const [active, setActive] = useState(VIDEOS[0].id);
   const video = VIDEOS.find((v) => v.id === active)!;
   return (
+    <ReplayScope id="videos">
     <section id="videos" className="relative mx-auto max-w-6xl scroll-mt-24 px-4 py-24">
       <SectionHead kicker={t('scrKicker')} title={t('scrTitle')} sub={t('scrSub')} />
       <Reveal>
@@ -77,5 +78,6 @@ export function Videos() {
         </AnimatePresence>
       </Reveal>
     </section>
+    </ReplayScope>
   );
 }
