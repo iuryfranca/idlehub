@@ -86,5 +86,5 @@ type IdleHubPromoProps = {
 
 No checklist de entrega, trocar "1800 quadros" por "2010 quadros".
 
-As capturas são geradas por `npm run screens` e ficam em `webpage/assets/screens/`. Os três jogos das capturas
+As capturas são geradas por `npm run screens` e ficam em `docs/store/screens/`. Os três jogos das capturas
 ("Reino Ocioso", "Minas de Cristal", "Forja Estelar") são fictícios.

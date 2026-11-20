@@ -171,7 +171,8 @@ scripts/capture-screens.js  refaz as capturas do site e do vídeo (npm run scree
 scripts/build-icon.js   gera build/icon.ico e build/icon.png a partir de build/icon.svg (npm run icon)
 scripts/criar-atalho.ps1  atalho na área de trabalho com o ícone (npm run atalho)
 build/                  ícone do app (a marca do site: 4 painéis numa janela, com a faixa Aurora)
-webpage/                página de apresentação (site estático, sem scripts nem recursos externos)
+site/                   site de apresentação (React + Vite, publicado no GitHub Pages; ver site/README.md)
+docs/store/             guia e capturas da Microsoft Store (npm run screens refaz as capturas)
 test/                   testes de store, layout, idioma, user-agent, contraste das cores, monitor e hub de jogos (node --test)
 ```
 

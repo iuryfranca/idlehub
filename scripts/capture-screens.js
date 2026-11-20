@@ -1,4 +1,4 @@
-// Gera as capturas de divulgacao do IdleHub (site em webpage/ e video de apresentacao).
+// Gera as capturas do IdleHub usadas na listagem da Microsoft Store e no manual do video (docs/store/screens/).
 // Rodar: npm run screens  (precisa do Electron instalado: npm install)
 // Cada captura usa uma pasta de dados temporaria e um script que, dentro do app, troca o conteudo dos paineis
 // por uma pagina de jogo de demonstracao (ficticia). O app em si nao muda; nada e enviado para fora.
@@ -10,7 +10,7 @@ const { execFileSync } = require('child_process');
 const APP = path.resolve(__dirname, '..');
 const S = fs.mkdtempSync(path.join(os.tmpdir(), 'idlehub-shots-'));
 const OUT = path.join(S, 'raw');
-const FINAL = path.join(APP, 'webpage', 'assets', 'screens');
+const FINAL = path.join(APP, 'docs', 'store', 'screens');
 const ELECTRON = path.join(APP, 'node_modules', 'electron', 'dist', 'electron.exe');
 fs.mkdirSync(OUT, { recursive: true });
 

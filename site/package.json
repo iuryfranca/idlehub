@@ -1,0 +1,32 @@
+{
+  "name": "idlehub-site",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Site de apresentação do IdleHub (React + Vite). Publicado no GitHub Pages.",
+  "scripts": {
+    "themes": "node scripts/themes.mjs",
+    "dev": "npm run themes && vite",
+    "build": "npm run themes && tsc --noEmit && vite build",
+    "preview": "vite preview"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@fontsource-variable/roboto-flex": "5.3.0",
+    "@fontsource-variable/roboto-mono": "5.3.0",
+    "lucide-react": "1.69.0",
+    "motion": "14.9.1",
+    "react": "19.1.10",
+    "react-dom": "19.1.10"
+  },
+  "devDependencies": {
+    "@material/material-color-utilities": "0.3.0",
+    "@tailwindcss/vite": "4.3.4",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.2.1",
+    "tailwindcss": "4.3.4",
+    "typescript": "7.0.2",
+    "vite": "8.3.6"
+  }
+}
