@@ -65,7 +65,14 @@ button { font: inherit; color: inherit; }
 .dot[data-status="error"] { background: var(--bad); }
 @keyframes pulse { 50% { opacity: .35; } }
 
-.drawer-foot { margin-top: auto; padding: 14px 4px 0; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.drawer-foot { margin-top: auto; padding: 14px 4px 0; display: flex; flex-direction: column; gap: 12px; }
+.foot-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.lang { display: flex; flex-direction: column; gap: 5px; }
+.lang-label { color: var(--muted); font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+.lang select { width: 100%; appearance: none; border: 1px solid var(--line); border-radius: 8px; background-color: var(--surface-2); color: var(--text); font: 12px var(--font); padding: 7px 26px 7px 10px; cursor: pointer;
+  background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+  background-position: calc(100% - 13px) 50%, calc(100% - 9px) 50%; background-size: 4px 4px; background-repeat: no-repeat; }
+.lang select:hover { border-color: var(--muted); }
 .themes { display: flex; gap: 6px; flex-wrap: wrap; }
 .swatch { width: 20px; height: 20px; border-radius: 50%; border: 1px solid var(--line); padding: 0; cursor: pointer; }
 .swatch[aria-checked="true"] { outline: 2px solid var(--accent); outline-offset: 2px; }
@@ -79,11 +86,11 @@ button { font: inherit; color: inherit; }
 /* lateral recolhida: vira um trilho so com os icones dos jogos */
 .drawer-closed .drawer { padding-inline: 8px; }
 .drawer-closed .brand-name, .drawer-closed .section-label, .drawer-closed .game-item .label, .drawer-closed .game-item .count,
-.drawer-closed .add-row .label, .drawer-closed .accounts, .drawer-closed .version { display: none; }
+.drawer-closed .add-row .label, .drawer-closed .accounts, .drawer-closed .version, .drawer-closed .lang { display: none; }
 .drawer-closed .brand { justify-content: center; padding-inline: 0; }
 .drawer-closed .game-item, .drawer-closed .add-row { justify-content: center; padding-inline: 0; }
 .drawer-closed .add-row .plus { width: 32px; }
-.drawer-closed .drawer-foot { flex-direction: column; }
+.drawer-closed .foot-row { flex-direction: column; }
 .drawer-closed .themes { flex-direction: column; }
 
 /* ---------- barra ---------- */

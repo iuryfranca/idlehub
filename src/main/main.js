@@ -4,8 +4,8 @@ const electron = require('electron');
 const { app, BrowserWindow, ipcMain, session, shell, Menu } = electron;
 const fs = require('node:fs');
 const path = require('node:path');
-const { Store, partitionOf, accountOfPartition } = require('./store');
-const { installPanelPolicy } = require('./panels');
+const { Store, partitionOf, accountOfPartition, langFromLocale } = require('./store');
+const { installPanelPolicy, setPanelLanguage } = require('./panels');
 const { chromeLikeUserAgent } = require('./user-agent');
 const catalog = require('./catalog');
 
@@ -62,7 +62,11 @@ function expose(channel, handler) {
 }
 
 expose('state:load', () => ({ state: store.state, catalog, version: app.getVersion() }));
-expose('state:save', (next) => store.save(next));
+expose('state:save', (next) => {
+  const saved = store.save(next);
+  setPanelLanguage(saved.prefs.lang);
+  return saved;
+});
 expose('account:clear', async (accountId) => {
   // So limpa sessao de conta que ja saiu do estado salvo (evita apagar uma conta ativa por engano).
   const partition = partitionOf(String(accountId));
@@ -177,6 +181,9 @@ app.whenReady().then(() => {
   if (!hasLock) return;
   session.defaultSession.setPermissionRequestHandler((_wc, permission, reply) => reply(permission === 'clipboard-sanitized-write'));
   store = new Store(path.join(app.getPath('userData'), 'idlehub.json'));
+  // Primeira abertura: idioma do sistema.
+  if (!store.state.prefs.lang) store.save({ ...store.state, prefs: { ...store.state.prefs, lang: langFromLocale(app.getLocale()) } });
+  setPanelLanguage(store.state.prefs.lang);
   installShortcuts();
   openMainWindow();
 });

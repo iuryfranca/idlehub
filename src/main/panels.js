@@ -26,10 +26,24 @@ const originOf = (u) => (URL.canParse(String(u)) ? new URL(String(u)).origin : n
 const sameOrigin = (a, b) => originOf(a) !== null && originOf(a) === originOf(b);
 const isWebUrl = (u) => /^https?:\/\//i.test(String(u));
 
+// Idioma pedido aos jogos (cabecalho Accept-Language), igual ao idioma escolhido no app.
+// So a lista em ordem de preferencia: o Electron calcula os pesos q= sozinho.
+const ACCEPT_LANGUAGE = { 'pt-BR': 'pt-BR,pt,en', en: 'en-US,en', es: 'es-ES,es,en' };
+let acceptLanguage = ACCEPT_LANGUAGE.en;
+const lockedSessions = new Set();
+const applyLanguage = (ses) => ses.setUserAgent(ses.getUserAgent(), acceptLanguage);
+
+// Troca o idioma pedido por todas as sessoes de conta ja abertas (vale nas proximas requisicoes).
+function setPanelLanguage(lang) {
+  acceptLanguage = ACCEPT_LANGUAGE[lang] || ACCEPT_LANGUAGE.en;
+  for (const ses of lockedSessions) applyLanguage(ses);
+}
+
 function lockSession(partition) {
   const ses = session.fromPartition(partition);
-  if (ses.__idlehubLocked) return;
-  ses.__idlehubLocked = true;
+  if (lockedSessions.has(ses)) return;
+  lockedSessions.add(ses);
+  applyLanguage(ses);
   ses.setPermissionRequestHandler((_wc, permission, reply) => reply(GRANTED.has(permission)));
   ses.setPermissionCheckHandler((_wc, permission) => !BLOCKED_CHECKS.has(permission));
   ses.on('will-download', (event, item) => {
@@ -117,4 +131,4 @@ function installPanelPolicy(hooks) {
   };
 }
 
-module.exports = { installPanelPolicy, LOCKED_PREFS };
+module.exports = { installPanelPolicy, setPanelLanguage, LOCKED_PREFS };

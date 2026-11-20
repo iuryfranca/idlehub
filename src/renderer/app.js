@@ -1,13 +1,12 @@
 'use strict';
-/* global HubLayout, HubIcon, hub */
+/* global HubLayout, HubIcon, HubI18n, hub */
 (async function main() {
   const $ = (id) => document.getElementById(id);
   const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 
-  const THEMES = [
-    { id: 'grafite', name: 'Grafite' }, { id: 'aurora', name: 'Aurora' }, { id: 'oceano', name: 'Oceano' },
-    { id: 'areia', name: 'Areia' }, { id: 'papel', name: 'Papel' }
-  ];
+  const t = HubI18n.t;
+  const THEMES = ['grafite', 'aurora', 'oceano', 'areia', 'papel'];
+  const themeName = (id) => t('theme' + id[0].toUpperCase() + id.slice(1));
   const HEAD = 30;   // altura da faixa de titulo de cada painel
   const GAP = 8;
 
@@ -31,7 +30,7 @@
     mutate(draft);
     // So redesenha depois de gravado: o processo principal so libera o <webview> de uma conta que ja esta salva.
     S = draft;
-    saving = saving.then(() => hub.save(draft)).then((saved) => { S = saved; render(); }).catch(() => toast('Não foi possível salvar.'));
+    saving = saving.then(() => hub.save(draft)).then((saved) => { S = saved; render(); }).catch(() => toast(t('saveFailed')));
     return saving;
   }
 
@@ -71,10 +70,10 @@
     const dot = el('span', 'dot');
     const name = el('span', 'pname');
     const actions = el('div', 'pactions');
-    view.btnStar = panelButton('star', 'Colocar em destaque', () => commit((d) => { const gg = d.games.find((x) => x.id === acc.gameId); gg.featured = acc.id; gg.layout = 'destaque'; }));
-    view.btnMute = panelButton('sound', 'Som desta conta', () => commit((d) => { const a = d.accounts.find((x) => x.id === acc.id); if (a) a.muted = !a.muted; }));
-    view.btnReload = panelButton('reload', 'Recarregar', () => { try { view.wv.reload(); } catch {} });
-    view.btnFocus = panelButton('expand', 'Expandir (Esc volta)', () => toggleFocus(acc.id));
+    view.btnStar = panelButton('star', t('pinFeatured'), () => commit((d) => { const gg = d.games.find((x) => x.id === acc.gameId); gg.featured = acc.id; gg.layout = 'destaque'; }));
+    view.btnMute = panelButton('sound', t('muteAccount'), () => commit((d) => { const a = d.accounts.find((x) => x.id === acc.id); if (a) a.muted = !a.muted; }));
+    view.btnReload = panelButton('reload', t('reload'), () => { try { view.wv.reload(); } catch {} });
+    view.btnFocus = panelButton('expand', t('expand'), () => toggleFocus(acc.id));
     actions.append(view.btnStar, view.btnMute, view.btnReload, view.btnFocus);
     head.append(idx, dot, name, actions);
     head.addEventListener('dblclick', () => toggleFocus(acc.id));
@@ -124,14 +123,15 @@
       const muted = S.prefs.muted || acc.muted;
       v.btnMute.replaceChildren(HubIcon(muted ? 'mute' : 'sound'));
       v.btnMute.classList.toggle('on', acc.muted);
-      v.btnMute.title = acc.muted ? 'Conta sem som (clique para ligar)' : 'Silenciar esta conta';
+      v.btnMute.title = acc.muted ? t('accountMuted') : t('muteAccount');
+      v.btnStar.title = t('pinFeatured'); v.btnReload.title = t('reload'); v.btnFocus.title = t('expand');
       applyAudio(v); applyZoom(v);
     }
     for (const id of [...views.keys()]) if (!alive.has(id)) destroyView(id);
   }
 
   // ---------- layout ----------
-  const splitter = el('div', 'splitter'); splitter.title = 'Arraste para ajustar';
+  const splitter = el('div', 'splitter');
   $('stage').appendChild(splitter);
 
   function layoutStage() {
@@ -234,21 +234,21 @@
     const g = game();
     $('accountsSection').hidden = !g;
     if (!g) return;
-    $('accountsLabel').textContent = 'Contas · ' + g.name;
+    $('accountsLabel').textContent = t('accountsOf', { game: g.name });
     const list = $('accountList');
     list.replaceChildren();
     for (const a of accountsOf(g.id)) {
       const li = el('li', 'account-item'); li.dataset.id = a.id;
       li.classList.toggle('focused', focusId === a.id);
       const dot = el('span', 'dot'); dot.dataset.status = views.get(a.id)?.status || 'loading';
-      const name = el('button', 'account-name', a.name); name.type = 'button'; name.title = 'Expandir esta conta';
+      const name = el('button', 'account-name', a.name); name.type = 'button'; name.title = t('expandAccount');
       name.addEventListener('click', () => toggleFocus(a.id));
       const acts = el('span', 'account-actions');
       acts.append(
-        panelButton('edit', 'Renomear', () => renameAccount(a)),
-        panelButton('trash', 'Remover conta', () => removeAccount(a))
+        panelButton('edit', t('rename'), () => renameAccount(a)),
+        panelButton('trash', t('removeAccount'), () => removeAccount(a))
       );
-      if (a.muted) li.appendChild(Object.assign(el('span', 'muted-flag'), { title: 'Sem som' })).appendChild(HubIcon('mute'));
+      if (a.muted) li.appendChild(Object.assign(el('span', 'muted-flag'), { title: t('muted') })).appendChild(HubIcon('mute'));
       li.prepend(dot, name);
       li.appendChild(acts);
       list.appendChild(li);
@@ -258,19 +258,45 @@
 
   function renderThemes() {
     const box = $('themes');
-    if (box.childElementCount) { box.querySelectorAll('button').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.theme === S.prefs.theme))); return; }
-    for (const t of THEMES) {
-      const b = el('button', 'swatch'); b.type = 'button'; b.title = t.name; b.dataset.theme = t.id;
-      b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', String(t.id === S.prefs.theme));
-      b.addEventListener('click', () => commit((d) => { d.prefs.theme = t.id; }));
-      box.appendChild(b);
+    if (!box.childElementCount) {
+      for (const id of THEMES) {
+        const b = el('button', 'swatch'); b.type = 'button'; b.dataset.theme = id;
+        b.setAttribute('role', 'radio');
+        b.addEventListener('click', () => commit((d) => { d.prefs.theme = id; }));
+        box.appendChild(b);
+      }
     }
+    box.querySelectorAll('button').forEach((b) => {
+      b.title = themeName(b.dataset.theme);
+      b.setAttribute('aria-label', b.title);
+      b.setAttribute('aria-checked', String(b.dataset.theme === S.prefs.theme));
+    });
+  }
+
+  // ---------- idioma ----------
+  // Uma lingua por vez: todo texto fixo da interface vem do dicionario do idioma escolhido.
+  function renderLanguage() {
+    const select = $('language');
+    if (!select.options.length) {
+      for (const lang of HubI18n.LANGUAGES) select.appendChild(Object.assign(el('option', null, lang.label), { value: lang.id }));
+      select.addEventListener('change', () => {
+        commit((d) => { d.prefs.lang = select.value; }).then(() => toast(t('languageChanged')));
+      });
+    }
+    select.value = S.prefs.lang;
+    HubI18n.setLanguage(S.prefs.lang);
+    document.documentElement.lang = S.prefs.lang;
+    // textos fixos do index.html
+    document.querySelectorAll('[data-i18n]').forEach((n) => { n.textContent = t(n.dataset.i18n); });
+    document.querySelectorAll('[data-i18n-title]').forEach((n) => { n.title = t(n.dataset.i18nTitle); });
+    document.querySelectorAll('[data-i18n-aria]').forEach((n) => { n.setAttribute('aria-label', t(n.dataset.i18nAria)); });
+    splitter.title = t('dragToResize');
   }
 
   // ---------- barra ----------
   function renderBar() {
     const g = game();
-    $('gameTitle').textContent = g ? g.name : 'Nenhum jogo';
+    $('gameTitle').textContent = g ? g.name : t('noGame');
     $('gameHost').textContent = g ? new URL(g.url).host : '';
     $('gameControls').hidden = !g;
     if (g) {
@@ -290,12 +316,12 @@
     const n = g ? accountsOf(g.id).length : 0;
     box.hidden = !!(g && n);
     if (!box.hidden) {
-      const b = el('button', 'btn primary', g ? 'Criar a primeira conta' : 'Adicionar um jogo'); b.type = 'button';
+      const b = el('button', 'btn primary', g ? t('emptyCreateFirst') : t('emptyAddGame')); b.type = 'button';
       b.addEventListener('click', () => (g ? addAccount() : addGame()));
       box.append(
         el('div', 'empty-mark'),
-        el('h1', null, g ? 'Nenhuma conta em ' + g.name : 'Seus jogos idle, lado a lado'),
-        el('p', null, g ? 'Cada conta abre com sessão própria: cookies e login não se misturam.' : 'Adicione um jogo de navegador e abra várias contas dele na mesma janela.'),
+        el('h1', null, g ? t('emptyNoAccounts', { game: g.name }) : t('emptyHero')),
+        el('p', null, g ? t('emptyNoAccountsText') : t('emptyHeroText')),
         b
       );
     }
@@ -306,13 +332,14 @@
     $('shell').classList.toggle('drawer-closed', !S.prefs.drawer);
     $('toggleDrawer').replaceChildren(HubIcon('sidebar'));
     $('gameMenu').replaceChildren(HubIcon('gear'));
+    renderLanguage();
     syncViews();
     renderGames(); renderAccounts(); renderThemes(); renderBar(); renderEmpty();
     layoutStage();
   }
 
   // ---------- dialogos ----------
-  function ask({ title, fields = [], ok = 'Salvar', danger = false, extra, validate }) {
+  function ask({ title, fields = [], ok = t('save'), danger = false, extra, validate }) {
     const dlg = $('dialog');
     $('dialogTitle').textContent = title;
     const body = $('dialogBody');
@@ -351,23 +378,23 @@
   }
 
   const httpsOk = (u) => { try { const x = new URL(u); return x.protocol === 'https:'; } catch { return false; } };
-  const gameProblem = (v) => (!v.name ? 'Dê um nome ao jogo.' : !httpsOk(v.url) ? 'Use um link completo começando com https://' : null);
+  const gameProblem = (v) => (!v.name ? t('errGameName') : !httpsOk(v.url) ? t('errGameUrl') : null);
 
   async function addGame() {
     const v = await ask({
-      title: 'Adicionar jogo', ok: 'Adicionar',
+      title: t('addGame'), ok: t('add'),
       fields: [
-        { name: 'name', label: 'Nome', placeholder: 'Ex.: Meu jogo idle', max: 40 },
-        { name: 'url', label: 'Link do jogo (HTTPS)', placeholder: 'https://...' }
+        { name: 'name', label: t('gameName'), placeholder: t('gameNamePlaceholder'), max: 40 },
+        { name: 'url', label: t('gameUrl'), placeholder: 'https://...' }
       ],
       extra: (inputs) => {
         const wrap = el('div', 'catalog');
-        wrap.appendChild(el('span', 'catalog-label', 'Sugestões'));
+        wrap.appendChild(el('span', 'catalog-label', t('suggestions')));
         const chips = el('div', 'chips');
         const have = new Set(S.games.map((g) => new URL(g.url).origin));
         for (const c of catalog) {
           const chip = el('button', 'chip', c.name); chip.type = 'button';
-          if (have.has(new URL(c.url).origin)) { chip.disabled = true; chip.title = 'Já adicionado'; }
+          if (have.has(new URL(c.url).origin)) { chip.disabled = true; chip.title = t('alreadyAdded'); }
           chip.addEventListener('click', () => { inputs.name.value = c.name; inputs.url.value = c.url; inputs.url.focus(); });
           chips.appendChild(chip);
         }
@@ -381,7 +408,7 @@
     focusId = null;
     await commit((d) => {
       d.games.push({ id: gid, name: v.name, url: v.url, zoom: 1, aspect: 'livre', layout: 'grade', featured: null, split: 0.68 });
-      d.accounts.push({ id: aid, gameId: gid, name: 'Conta 1', muted: false });
+      d.accounts.push({ id: aid, gameId: gid, name: t('defaultAccountName', { n: 1 }), muted: false });
       d.prefs.activeGame = gid;
     });
   }
@@ -390,14 +417,14 @@
     const g = game(); if (!g) return;
     let removeIt = false;
     const v = await ask({
-      title: 'Editar jogo', ok: 'Salvar',
+      title: t('editGame'), ok: t('save'),
       fields: [
-        { name: 'name', label: 'Nome', value: g.name, max: 40 },
-        { name: 'url', label: 'Link do jogo (HTTPS)', value: g.url }
+        { name: 'name', label: t('gameName'), value: g.name, max: 40 },
+        { name: 'url', label: t('gameUrl'), value: g.url }
       ],
       extra: () => {
         const box = el('div', 'danger-zone');
-        const b = el('button', 'btn ghost danger-text', 'Remover este jogo e suas contas'); b.type = 'button';
+        const b = el('button', 'btn ghost danger-text', t('removeGameButton')); b.type = 'button';
         b.addEventListener('click', () => { removeIt = true; $('dialogForm').requestSubmit(); });
         box.appendChild(b);
         return box;
@@ -406,8 +433,8 @@
     });
     if (!v) return;
     if (removeIt) {
-      const sure = await ask({ title: 'Remover ' + g.name + '?', ok: 'Remover', danger: true,
-        extra: () => el('p', 'dialog-text', 'As ' + accountsOf(g.id).length + ' conta(s) deste jogo serão apagadas, inclusive o login salvo nelas.') });
+      const sure = await ask({ title: t('removeTitle', { name: g.name }), ok: t('remove'), danger: true,
+        extra: () => el('p', 'dialog-text', t('removeGameText', { count: accountsOf(g.id).length })) });
       if (!sure) return;
       const gone = accountsOf(g.id).map((a) => a.id);
       await commit((d) => {
@@ -424,21 +451,21 @@
   async function addAccount() {
     const g = game(); if (!g) return;
     const n = accountsOf(g.id).length;
-    if (n >= 9) return toast('Máximo de 9 contas por jogo.');
-    const v = await ask({ title: 'Nova conta em ' + g.name, ok: 'Criar', fields: [{ name: 'name', label: 'Apelido da conta', value: 'Conta ' + (n + 1), max: 40 }],
-      validate: (x) => (x.name ? null : 'Dê um apelido à conta.') });
+    if (n >= 9) return toast(t('maxAccounts'));
+    const v = await ask({ title: t('newAccountIn', { game: g.name }), ok: t('create'), fields: [{ name: 'name', label: t('accountNickname'), value: t('defaultAccountName', { n: n + 1 }), max: 40 }],
+      validate: (x) => (x.name ? null : t('errNickname')) });
     if (!v) return;
     await commit((d) => { d.accounts.push({ id: uid('a'), gameId: g.id, name: v.name, muted: false }); });
   }
 
   async function renameAccount(a) {
-    const v = await ask({ title: 'Renomear conta', fields: [{ name: 'name', label: 'Apelido', value: a.name, max: 40 }], validate: (x) => (x.name ? null : 'O apelido não pode ficar vazio.') });
+    const v = await ask({ title: t('renameAccount'), fields: [{ name: 'name', label: t('nickname'), value: a.name, max: 40 }], validate: (x) => (x.name ? null : t('errNicknameEmpty')) });
     if (v) commit((d) => { const x = d.accounts.find((y) => y.id === a.id); if (x) x.name = v.name; });
   }
 
   async function removeAccount(a) {
-    const ok = await ask({ title: 'Remover ' + a.name + '?', ok: 'Remover', danger: true,
-      extra: () => el('p', 'dialog-text', 'A sessão desta conta (login, cookies e dados salvos pelo jogo) será apagada deste computador.') });
+    const ok = await ask({ title: t('removeTitle', { name: a.name }), ok: t('remove'), danger: true,
+      extra: () => el('p', 'dialog-text', t('removeAccountText')) });
     if (!ok) return;
     await commit((d) => { d.accounts = d.accounts.filter((x) => x.id !== a.id); });
     hub.clearAccount(a.id);

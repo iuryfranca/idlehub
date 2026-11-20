@@ -62,7 +62,33 @@ npm start              # ou dois cliques em "Abrir IdleHub.bat"
 | Tela cheia | F11 |
 | Lateral recolhível | Ctrl+B |
 | Temas | Grafite, Aurora, Oceano, Areia, Papel (salvos localmente) |
+| Idioma | Seletor na lateral: Português (Brasil), English, Español. Na primeira abertura, segue o idioma do Windows. Os jogos recebem o mesmo idioma (cabeçalho `Accept-Language`) e o usam ao recarregar, se tiverem tradução |
 | Jogos continuam rodando | Trocar de jogo só esconde os painéis; nada é recarregado |
+
+## Diferenças em relação ao PokeGrid
+
+O IdleHub foi **inspirado** no [PokeGrid](https://github.com/soufoka/PokeGrid-source), mas é outro projeto: foi escrito do
+zero, com outro objetivo e outra interface. Nenhum código do PokeGrid foi copiado.
+
+| | PokeGrid | IdleHub |
+|---|---|---|
+| **Objetivo** | Ferramenta completa para **um jogo**: o Poke Idle World | Organizador **genérico** de jogos idle de navegador |
+| **Jogos** | Só o Poke Idle World | Qualquer jogo com link HTTPS, com várias sugestões prontas |
+| **Contas** | De 1 a 4, em partições fixas (`conta1` a `conta4`) | Até 9 **por jogo**, quantos jogos você quiser, cada conta com partição própria |
+| **Layout** | Quadrantes fixos (2×2) | Grade automática ou Destaque (uma grande e as outras ao lado), divisória arrastável, reordenar arrastando |
+| **Troca entre jogos** | Não se aplica (um jogo só) | Painéis de outros jogos continuam rodando escondidos, sem recarregar |
+| **Login** | Salva usuário e senha (cifrados no PC) e entra sozinho, inclusive quando a sessão cai | **Não guarda senhas** nem faz login automático: você entra uma vez em cada conta, e a sessão (cookies) fica salva |
+| **Mexe no jogo?** | Sim: injeta scripts nos painéis (Modo Eco, esconder chat/menus, Modo Simples, venda protegida no Mercado, userscripts) | **Não**: o jogo roda exatamente como no navegador; o app só organiza as janelas |
+| **Ferramentas do jogo** | Calculadora de IV, tier list, "onde caçar", incubadoras, histórico de shiny/capturas | Nenhuma por enquanto (o foco é a base genérica) |
+| **Avisos** | Notificações do Windows e webhook do Discord (shiny, conta caiu, sem pokébola) | Nenhum: o app não envia nada para lugar nenhum |
+| **Sistema** | Bandeja, iniciar com o Windows, manter o PC acordado, log de erros, backup | Não tem; app mais simples |
+| **Interface** | Uma página única (≈5.800 linhas de HTML) | Interface própria, em módulos: layout como cálculo puro e testado, ícones e temas próprios |
+| **Idiomas** | Português, inglês e espanhol | Português, inglês e espanhol (dicionário com teste que garante as mesmas chaves nos três) |
+| **Rede** | Só o jogo e, se você configurar, o webhook do Discord | Só os jogos que você abre (verificado com log de rede, ver Privacidade) |
+| **Testes** | Testes de regressão por versão | Testes unitários de estado, layout, idioma e User-Agent, mais testes de interface automatizados |
+
+Em resumo: o PokeGrid é um "canivete suíço" para o Poke Idle World. O IdleHub é uma base enxuta e genérica para
+organizar contas de qualquer jogo idle, sem tocar no jogo.
 
 ## Segurança
 
@@ -80,8 +106,8 @@ src/main/user-agent.js  User-Agent de Chrome comum (sem o token do Electron)
 src/main/store.js       estado + validação (tudo que vem da interface passa por normalize())
 src/main/catalog.js     sugestões de jogos
 src/preload.js          ponte mínima (window.hub)
-src/renderer/           interface: index.html, styles.css, app.js, layout.js (cálculo puro), icons.js
-test/                   testes de store, layout e user-agent (node --test)
+src/renderer/           interface: index.html, styles.css, app.js, layout.js (cálculo puro), icons.js, i18n.js (traduções)
+test/                   testes de store, layout, idioma e user-agent (node --test)
 ```
 
 ## Testes
