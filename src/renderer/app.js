@@ -1,5 +1,5 @@
 'use strict';
-/* global HubLayout, HubIcon, HubI18n, hub */
+/* global HubLayout, HubIcon, HubI18n, HubMonitor, hub */
 (async function main() {
   const $ = (id) => document.getElementById(id);
   const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
@@ -21,6 +21,8 @@
 
   const views = new Map(); // accountId -> { el, head, frame, wv, url, ready, status }
   let focusId = null;
+  let screen = 'games'; // 'games' ou 'monitor' (nao fica salvo: o app sempre abre nos jogos)
+  let monitorScreen = null;
   let isFullscreen = false;
 
   // ---------- estado ----------
@@ -49,13 +51,13 @@
 
   function applyAudio(view) {
     const acc = S.accounts.find((a) => a.id === view.id);
-    if (!view.ready || !acc) return;
+    if (!view.wv || !view.ready || !acc) return;
     try { view.wv.setAudioMuted(S.prefs.muted || acc.muted); } catch {}
   }
   function applyZoom(view) {
     const acc = S.accounts.find((a) => a.id === view.id);
     const g = acc && S.games.find((x) => x.id === acc.gameId);
-    if (!view.ready || !g) return;
+    if (!view.wv || !view.ready || !g) return;
     try { view.wv.setZoomFactor(g.zoom); } catch {}
   }
 
@@ -67,7 +69,7 @@
   }
 
   function createView(acc, g) {
-    const view = { id: acc.id, url: g.url, ready: false, status: 'loading' };
+    const view = { id: acc.id, url: g.url, hibernated: acc.hibernated, ready: false, status: 'loading', startedAt: acc.hibernated ? 0 : Date.now() };
     const panel = el('section', 'panel'); panel.dataset.id = acc.id;
     const head = el('div', 'panel-head'); head.draggable = true;
     const idx = el('span', 'pidx');
@@ -78,26 +80,45 @@
     view.btnMute = panelButton('sound', t('muteAccount'), () => commit((d) => { const a = d.accounts.find((x) => x.id === acc.id); if (a) a.muted = !a.muted; }));
     view.btnReload = panelButton('reload', t('reload'), () => { try { view.wv.reload(); } catch {} });
     view.btnFocus = panelButton('expand', t('expand'), () => toggleFocus(acc.id));
-    actions.append(view.btnStar, view.btnMute, view.btnReload, view.btnFocus);
+    view.btnSleep = panelButton(acc.hibernated ? 'sun' : 'moon', '', () => toggleHibernate(acc.id));
+    view.btnMute.hidden = view.btnReload.hidden = acc.hibernated;
+    actions.append(view.btnStar, view.btnMute, view.btnReload, view.btnSleep, view.btnFocus);
     head.append(idx, dot, name, actions);
     head.addEventListener('dblclick', () => toggleFocus(acc.id));
 
     const body = el('div', 'panel-body');
     const frame = el('div', 'panel-frame');
+    panel.append(head, body);
+    Object.assign(view, { el: panel, head, idx, dot, name, frame, wv: null });
+
+    if (acc.hibernated) {
+      // Conta hibernada: nenhum processo, so um cartao para acordar.
+      const card = el('div', 'sleep-card');
+      const wake = el('button', 'tonal-btn state'); wake.type = 'button';
+      wake.append(HubIcon('sun'), el('span', null, t('wake')));
+      wake.addEventListener('click', () => toggleHibernate(acc.id));
+      card.append(HubIcon('moon'), el('h3', null, t('hibernated')), el('p', null, t('hibernatedText')), wake);
+      body.appendChild(card);
+      view.sleepTexts = card;
+      wireDrag(view);
+      $('stage').appendChild(panel);
+      setStatus(view, 'sleep');
+      views.set(acc.id, view);
+      return view;
+    }
+
     const wv = document.createElement('webview');
     wv.setAttribute('partition', 'persist:acc-' + acc.id);
     wv.setAttribute('allowpopups', '');
     wv.setAttribute('src', g.url);
     frame.appendChild(wv);
     body.appendChild(frame);
-    panel.append(head, body);
-
-    Object.assign(view, { el: panel, head, idx, dot, name, frame, wv });
+    view.wv = wv;
     wv.addEventListener('dom-ready', () => { view.ready = true; applyZoom(view); applyAudio(view); });
     wv.addEventListener('did-start-loading', () => setStatus(view, 'loading'));
     wv.addEventListener('did-stop-loading', () => { if (view.status === 'loading') setStatus(view, 'ok'); });
     wv.addEventListener('did-fail-load', (e) => { if (e.isMainFrame && e.errorCode !== -3) setStatus(view, 'error'); });
-    wv.addEventListener('render-process-gone', () => setStatus(view, 'error'));
+    wv.addEventListener('render-process-gone', () => { setStatus(view, 'error'); view.startedAt = Date.now(); });
     wv.addEventListener('page-title-updated', (e) => { head.title = e.title; });
 
     wireDrag(view);
@@ -120,7 +141,7 @@
     for (const acc of S.accounts) {
       const g = S.games.find((x) => x.id === acc.gameId);
       let v = views.get(acc.id);
-      if (v && v.url !== g.url) { destroyView(acc.id); v = null; } // link do jogo mudou: recria
+      if (v && (v.url !== g.url || v.hibernated !== acc.hibernated)) { destroyView(acc.id); v = null; } // link mudou ou hibernou/acordou: recria
       if (!v) v = createView(acc, g);
       alive.add(acc.id);
       v.name.textContent = acc.name;
@@ -129,6 +150,7 @@
       v.btnMute.setAttribute('aria-pressed', String(acc.muted));
       v.btnMute.title = acc.muted ? t('accountMuted') : t('muteAccount');
       v.btnStar.title = t('pinFeatured'); v.btnReload.title = t('reload'); v.btnFocus.title = t('expand');
+      v.btnSleep.title = acc.hibernated ? t('wake') : t('hibernate');
       applyAudio(v); applyZoom(v);
     }
     for (const id of [...views.keys()]) if (!alive.has(id)) destroyView(id);
@@ -223,14 +245,17 @@
     list.replaceChildren();
     for (const g of S.games) {
       const b = el('button', 'nav-item state'); b.type = 'button'; b.title = g.name;
-      const active = g.id === S.prefs.activeGame;
+      const active = screen === 'games' && g.id === S.prefs.activeGame;
       b.classList.toggle('active', active);
       if (active) b.setAttribute('aria-current', 'page');
       const indicator = el('span', 'nav-indicator');
       indicator.appendChild(el('span', 'tile', monogram(g.name)));
       const n = accountsOf(g.id).length;
       b.append(indicator, el('span', 'label', g.name), el('span', 'count', n ? String(n) : ''));
-      b.addEventListener('click', () => { if (g.id !== S.prefs.activeGame) { focusId = null; commit((d) => { d.prefs.activeGame = g.id; }); } });
+      b.addEventListener('click', () => {
+        if (screen !== 'games') setScreen('games');
+        if (g.id !== S.prefs.activeGame) { focusId = null; commit((d) => { d.prefs.activeGame = g.id; }); }
+      });
       list.appendChild(b);
     }
   }
@@ -317,14 +342,21 @@
     document.querySelectorAll('[data-i18n-title]').forEach((n) => { n.title = t(n.dataset.i18nTitle); });
     document.querySelectorAll('[data-i18n-aria]').forEach((n) => { n.setAttribute('aria-label', t(n.dataset.i18nAria)); });
     splitter.title = t('dragToResize');
+    for (const v of views.values()) if (v.sleepTexts) {
+      v.sleepTexts.querySelector('h3').textContent = t('hibernated');
+      v.sleepTexts.querySelector('p').textContent = t('hibernatedText');
+      v.sleepTexts.querySelector('button span').textContent = t('wake');
+    }
+    monitorScreen?.renderTexts();
   }
 
   // ---------- barra ----------
   function renderBar() {
     const g = game();
-    $('gameTitle').textContent = g ? g.name : t('noGame');
-    $('gameHost').textContent = g ? new URL(g.url).host : '';
-    $('gameControls').hidden = !g;
+    const onMonitor = screen === 'monitor';
+    $('gameTitle').textContent = onMonitor ? t('monitor') : g ? g.name : t('noGame');
+    $('gameHost').textContent = onMonitor ? t('monitorSubtitle') : g ? new URL(g.url).host : '';
+    $('gameControls').hidden = !g || onMonitor;
     if (g) {
       document.querySelectorAll('[data-layout]').forEach((b) => {
         const on = b.dataset.layout === g.layout;
@@ -370,6 +402,9 @@
     $('shell').classList.toggle('drawer-closed', !S.prefs.drawer);
     renderLanguage();
     renderModes();
+    $('monitor').hidden = screen !== 'monitor';
+    $('navMonitor').classList.toggle('active', screen === 'monitor');
+    $('navMonitor').toggleAttribute('aria-current', screen === 'monitor');
     syncViews();
     renderGames(); renderAccounts(); renderThemes(); renderBar(); renderEmpty();
     layoutStage();
@@ -546,10 +581,47 @@
   let toastT = 0;
   function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2600); }
 
+  // ---------- hibernacao e tela Monitor ----------
+  function toggleHibernate(id) {
+    const acc = S.accounts.find((a) => a.id === id);
+    if (!acc) return;
+    const sleeping = !acc.hibernated;
+    if (sleeping && focusId === id) focusId = null;
+    commit((d) => { const x = d.accounts.find((a) => a.id === id); if (x) x.hibernated = sleeping; })
+      .then(() => toast(sleeping ? t('hibernatedToast') : t('wokeToast', { name: acc.name })));
+  }
+
+  function setScreen(next) {
+    if (next === screen) return;
+    screen = next;
+    if (screen === 'monitor') hub.monitorStart(); else hub.monitorStop();
+    render();
+  }
+
+  monitorScreen = HubMonitor({
+    root: $('monitor'), t, el, views,
+    getState: () => S,
+    actions: {
+      reload: (id) => { try { views.get(id)?.wv?.reload(); } catch {} },
+      toggleMute: (id) => commit((d) => { const a = d.accounts.find((x) => x.id === id); if (a) a.muted = !a.muted; }),
+      toggleHibernate,
+      clearCache: (id) => hub.clearAccountCache(id).then((ok) => ok && toast(t('cacheCleared'))),
+      restart: async (id) => {
+        const acc = S.accounts.find((a) => a.id === id);
+        if (!acc) return;
+        const ok = await ask({ title: t('restartTitle', { name: acc.name }), ok: t('restartProcess'), danger: true, extra: () => el('p', 'dialog-text', t('restartText')) });
+        if (ok && await hub.restartAccount(id)) toast(t('restartDone'));
+      }
+    }
+  });
+  hub.onMonitorSample((sample) => { if (screen === 'monitor') monitorScreen.update(sample); });
+  $('navMonitor').addEventListener('click', () => setScreen(screen === 'monitor' ? 'games' : 'monitor'));
+
   // icones fixos
   const icons = { toggleDrawer: 'menu', gameMenu: 'gear', zoomOut: 'minus', zoomIn: 'plus' };
   for (const [id, name] of Object.entries(icons)) $(id).replaceChildren(HubIcon(name));
   document.querySelector('#addGame .fab-icon').replaceWith(HubIcon('plus'));
+  $('navMonitorIcon').replaceWith(HubIcon('chart'));
   document.querySelector('#addAccount .btn-icon').replaceWith(HubIcon('plus'));
 
   render();

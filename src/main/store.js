@@ -67,7 +67,7 @@ function normalize(input) {
     const name = cleanName(a.name);
     if (!name) continue;
     accIds.add(a.id); perGame.set(a.gameId, n + 1);
-    out.accounts.push({ id: a.id, gameId: a.gameId, name, muted: a.muted === true });
+    out.accounts.push({ id: a.id, gameId: a.gameId, name, muted: a.muted === true, hibernated: a.hibernated === true });
   }
 
   // o destaque precisa ser uma conta do proprio jogo

@@ -7,6 +7,7 @@ const path = require('node:path');
 const { Store, partitionOf, accountOfPartition, langFromLocale } = require('./store');
 const { installPanelPolicy, setPanelLanguage } = require('./panels');
 const { chromeLikeUserAgent } = require('./user-agent');
+const { createMonitor } = require('./monitor');
 const catalog = require('./catalog');
 
 const IS_DEV = !app.isPackaged;
@@ -76,6 +77,19 @@ expose('account:clear', async (accountId) => {
   await Promise.all([ses.clearStorageData(), ses.clearCache()]);
   return true;
 });
+// ---------- monitor e acoes por conta ----------
+let monitor = null;
+const existingAccount = (accountId) => (typeof accountId === 'string' && store.account(accountId) ? accountId : null);
+expose('monitor:start', () => { monitor.start(); return true; });
+expose('monitor:stop', () => { monitor.stop(); return true; });
+expose('account:restart', (accountId) => (existingAccount(accountId) ? monitor.restartAccount(accountId) : false));
+expose('account:clearCache', async (accountId) => {
+  // So o cache (imagens, scripts baixados); cookies e login ficam.
+  if (!existingAccount(accountId)) return false;
+  await session.fromPartition(partitionOf(accountId)).clearCache();
+  return true;
+});
+
 expose('window:fullscreen', () => {
   mainWindow.setFullScreen(!mainWindow.isFullScreen());
   return mainWindow.isFullScreen();
@@ -145,6 +159,7 @@ function openMainWindow() {
     return { action: 'deny' };
   });
 
+  mainWindow.on('closed', () => monitor?.stop());
   mainWindow.on('enter-full-screen', () => toRenderer('fullscreen', true));
   mainWindow.on('leave-full-screen', () => toRenderer('fullscreen', false));
   mainWindow.once('ready-to-show', () => {
@@ -191,6 +206,7 @@ app.whenReady().then(() => {
   if (!store.state.prefs.lang) store.save({ ...store.state, prefs: { ...store.state.prefs, lang: langFromLocale(app.getLocale()) } });
   setPanelLanguage(store.state.prefs.lang);
   applyMode(store.state.prefs.mode);
+  monitor = createMonitor({ store, send: (sample) => toRenderer('monitor:sample', sample), uiContents: () => (mainWindow && !mainWindow.isDestroyed() ? mainWindow.webContents : null) });
   installShortcuts();
   openMainWindow();
 });

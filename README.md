@@ -67,6 +67,28 @@ npm start              # ou dois cliques em "Abrir IdleHub.bat"
 | Aparência | Seguir o sistema, Claro ou Escuro. Vale também para os jogos que têm modo claro/escuro |
 | Idioma | Seletor na lateral: Português (Brasil), English, Español. Na primeira abertura, segue o idioma do Windows. Os jogos recebem o mesmo idioma (cabeçalho `Accept-Language`) e o usam ao recarregar, se tiverem tradução |
 | Jogos continuam rodando | Trocar de jogo só esconde os painéis; nada é recarregado |
+| **Monitor** | Tela dedicada (lateral → Monitor) com o uso da máquina e de cada conta em tempo real; ver abaixo |
+| **Hibernar conta** | 🌙 no painel ou no Monitor: fecha o processo da conta e libera CPU e memória, sem perder o login. ☀ acorda |
+
+## Monitor de recursos
+
+Abra pela lateral (**Monitor**). Atualiza a cada segundo, com gráficos dos últimos minutos.
+
+- **Máquina:** processador, memória, placa de vídeo (uso 3D), disco e rede. Cada cartão mostra o valor, uma
+  descrição e quanto disso é do IdleHub. Os cartões ocupam a largura toda e viram grade em telas menores.
+- **Contas do IdleHub:** CPU, memória e há quanto tempo cada conta está ligada, com ações:
+  recarregar, silenciar, hibernar/acordar, limpar cache (mantém o login) e **encerrar processo** (com confirmação;
+  use quando a conta travar: o painel recarrega sozinho e as outras contas não são afetadas).
+- **Por dentro do IdleHub:** os processos que o próprio app usa (principal, interface, GPU, rede), explicados.
+
+Como os números são obtidos:
+- CPU e memória vêm do próprio Electron (`app.getAppMetrics()`) e do Node (`os`). Cada leitura custa cerca de 1 ms.
+- GPU, disco e rede vêm dos contadores de desempenho do Windows (API PDH), lidos por um pequeno processo PowerShell
+  (`src/main/perf-sampler.ps1`). Ele usa os nomes em inglês dos contadores, que funcionam em qualquer idioma do Windows.
+  Ele só roda com a tela Monitor aberta e fecha sozinho se o IdleHub fechar.
+- A GPU aparece por app, não por conta: o Chromium desenha todos os painéis num único processo de GPU.
+- O histórico dos gráficos fica só na memória. Nada é gravado em disco nem enviado (verificado com o log de rede,
+  com o Monitor aberto).
 
 ## Diferenças em relação ao PokeGrid
 
@@ -84,7 +106,7 @@ zero, com outro objetivo e outra interface. Nenhum código do PokeGrid foi copia
 | **Mexe no jogo?** | Sim: injeta scripts nos painéis (Modo Eco, esconder chat/menus, Modo Simples, venda protegida no Mercado, userscripts) | **Não**: o jogo roda exatamente como no navegador; o app só organiza as janelas |
 | **Ferramentas do jogo** | Calculadora de IV, tier list, "onde caçar", incubadoras, histórico de shiny/capturas | Nenhuma por enquanto (o foco é a base genérica) |
 | **Avisos** | Notificações do Windows e webhook do Discord (shiny, conta caiu, sem pokébola) | Nenhum: o app não envia nada para lugar nenhum |
-| **Sistema** | Bandeja, iniciar com o Windows, manter o PC acordado, log de erros, backup | Não tem; app mais simples |
+| **Sistema** | Bandeja, iniciar com o Windows, manter o PC acordado, log de erros, backup | Monitor de recursos em tempo real (máquina, contas e processos internos) e hibernação de contas |
 | **Interface** | Uma página única (≈5.800 linhas de HTML), visual próprio | Inspirada no Material Design 3: tokens de cor/tipografia/forma, paletas geradas pelo algoritmo do M3, claro e escuro, em módulos |
 | **Idiomas** | Português, inglês e espanhol | Português, inglês e espanhol (dicionário com teste que garante as mesmas chaves nos três) |
 | **Rede** | Só o jogo e, se você configurar, o webhook do Discord | Só os jogos que você abre (verificado com log de rede, ver Privacidade) |
@@ -107,12 +129,15 @@ src/main/main.js        processo principal: janela, IPC, atalhos
 src/main/panels.js      política dos painéis: criação, sessões, popups, navegação, recuperação de queda
 src/main/user-agent.js  User-Agent de Chrome comum (sem o token do Electron)
 src/main/store.js       estado + validação (tudo que vem da interface passa por normalize())
+src/main/monitor.js     coleta do Monitor (só com a tela aberta); monitor-core.js tem as contas puras e testadas
+src/main/perf-sampler.ps1  leitor dos contadores do Windows (GPU, disco, rede) via API PDH
 src/main/catalog.js     sugestões de jogos
 src/preload.js          ponte mínima (window.hub)
-src/renderer/           interface: index.html, styles.css, app.js, layout.js (cálculo puro), icons.js, i18n.js (traduções)
+src/renderer/           interface: index.html, styles.css, app.js, layout.js (cálculo puro), icons.js, i18n.js (traduções),
+                        monitor-ui.js (tela Monitor e gráficos)
 src/renderer/m3/        tokens do Material 3 (tokens.css), cores geradas (colors.css) e a fonte Roboto Flex
 scripts/build-theme.mjs gera colors.css a partir das cores base (npm run theme)
-test/                   testes de store, layout, idioma, user-agent e contraste das cores (node --test)
+test/                   testes de store, layout, idioma, user-agent, contraste das cores e monitor (node --test)
 ```
 
 ## Testes

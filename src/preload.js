@@ -10,6 +10,11 @@ electron.contextBridge.exposeInMainWorld('hub', {
   clearAccount: call('account:clear'),
   toggleFullscreen: call('window:fullscreen'),
   openExternal: call('open:external'),
+  monitorStart: call('monitor:start'),
+  monitorStop: call('monitor:stop'),
+  restartAccount: call('account:restart'),
+  clearAccountCache: call('account:clearCache'),
+  onMonitorSample: listen('monitor:sample'),
   onHotkey: listen('hotkey'),
   onFullscreen: listen('fullscreen')
 });

@@ -19,6 +19,10 @@
 
       <button class="fab state" id="addGame" type="button"><span class="fab-icon"></span><span class="label" data-i18n="addGame"></span></button>
 
+      <nav class="dest-list">
+        <button class="nav-item state" id="navMonitor" type="button" data-i18n-title="monitorSubtitle"><span class="nav-indicator"><span class="nav-icon" id="navMonitorIcon"></span></span><span class="label" data-i18n="monitor"></span></button>
+      </nav>
+
       <div class="section-label" data-i18n="games"></div>
       <nav class="game-list" id="gameList"></nav>
 
@@ -77,8 +81,11 @@
         <button class="icon-btn state" id="fullscreen" type="button" data-i18n-title="fullscreen"></button>
       </header>
 
-      <div class="stage" id="stage">
-        <div class="empty" id="empty"></div>
+      <div class="content">
+        <div class="stage" id="stage">
+          <div class="empty" id="empty"></div>
+        </div>
+        <section class="monitor" id="monitor" hidden></section>
       </div>
     </main>
   </div>
@@ -99,6 +106,7 @@
   <script src="i18n.js"></script>
   <script src="layout.js"></script>
   <script src="icons.js"></script>
+  <script src="monitor-ui.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

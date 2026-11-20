@@ -24,11 +24,16 @@ test('nenhuma traducao vazia e as variaveis {x} batem entre idiomas', () => {
 test('toda chave usada na interface existe no dicionario', () => {
   const dir = path.join(__dirname, '..', 'src', 'renderer');
   const html = fs.readFileSync(path.join(dir, 'index.html'), 'utf8');
-  const js = fs.readFileSync(path.join(dir, 'app.js'), 'utf8');
+  const js = ['app.js', 'monitor-ui.js'].map((f) => fs.readFileSync(path.join(dir, f), 'utf8')).join('\n');
+  const cap = (s) => s[0].toUpperCase() + s.slice(1);
   const used = new Set([
     ...[...html.matchAll(/data-i18n(?:-title|-aria)?="(\w+)"/g)].map((m) => m[1]),
     ...[...js.matchAll(/\bt\('(\w+)'/g)].map((m) => m[1]),
-    ...['grafite', 'aurora', 'oceano', 'areia', 'papel'].map((th) => 'theme' + th[0].toUpperCase() + th.slice(1))
+    ...[...js.matchAll(/\bkey: '(\w+)'/g)].map((m) => m[1]),          // MODES em app.js
+    ...[...js.matchAll(/'(col[A-Z]\w+)'/g)].map((m) => m[1]), // cabecalho da tabela do Monitor
+    ...['grafite', 'aurora', 'oceano', 'areia', 'papel'].map((th) => 'theme' + cap(th)),
+    // nomes montados na tela Monitor: 'proc' + tipo e 'proc' + tipo + 'Desc'
+    ...['main', 'ui', 'gpu', 'network', 'audio', 'other'].flatMap((k) => ['proc' + cap(k), 'proc' + cap(k) + 'Desc'])
   ]);
   for (const key of used) assert.ok(base.includes(key), `chave sem traducao: ${key}`);
 });
