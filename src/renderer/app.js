@@ -594,7 +594,7 @@
   function setScreen(next) {
     if (next === screen) return;
     screen = next;
-    if (screen === 'monitor') hub.monitorStart(); else hub.monitorStop();
+    if (screen === 'monitor') hub.monitorStart(); else { hub.monitorStop(); monitorScreen.reset(); }
     render();
   }
 
@@ -606,6 +606,20 @@
       toggleMute: (id) => commit((d) => { const a = d.accounts.find((x) => x.id === id); if (a) a.muted = !a.muted; }),
       toggleHibernate,
       clearCache: (id) => hub.clearAccountCache(id).then((ok) => ok && toast(t('cacheCleared'))),
+      setWindowsProcesses: (on) => hub.setWindowsProcesses(on),
+      // Encerrar processo do Windows: confirmacao com nome, PID e memoria; o processo principal confere tudo de novo.
+      killProcess: async (proc) => {
+        if (!proc || proc.protected) return;
+        const mem = proc.memText; // mesmo formato da tabela (KB, MB, GB)
+        const ok = await ask({
+          title: t('killTitle', { name: proc.name }), ok: t('endProcess'), danger: true,
+          extra: () => el('p', 'dialog-text', t('killText', { pid: proc.pid, mem, desc: proc.desc || proc.name }))
+        });
+        if (!ok) return;
+        const result = await hub.killWindowsProcess(proc.pid, proc.name);
+        const key = result.ok ? 'killDone' : { denied: 'killDenied', gone: 'killGone', changed: 'killChanged', protected: 'killProtected' }[result.reason] || 'killError';
+        toast(t(key, { name: proc.name }));
+      },
       restart: async (id) => {
         const acc = S.accounts.find((a) => a.id === id);
         if (!acc) return;

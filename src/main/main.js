@@ -83,6 +83,9 @@ const existingAccount = (accountId) => (typeof accountId === 'string' && store.a
 expose('monitor:start', () => { monitor.start(); return true; });
 expose('monitor:stop', () => { monitor.stop(); return true; });
 expose('account:restart', (accountId) => (existingAccount(accountId) ? monitor.restartAccount(accountId) : false));
+// Processos do Windows: a lista so e coletada com a secao ligada; encerrar confere tudo de novo aqui.
+expose('winproc:enable', (on) => monitor.setWindowsProcesses(on === true));
+expose('winproc:kill', (pid, name) => (Number.isInteger(pid) && typeof name === 'string' ? monitor.killWindowsProcess({ pid, name }) : { ok: false, reason: 'invalid' }));
 expose('account:clearCache', async (accountId) => {
   // So o cache (imagens, scripts baixados); cookies e login ficam.
   if (!existingAccount(accountId)) return false;

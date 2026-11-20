@@ -14,6 +14,8 @@ electron.contextBridge.exposeInMainWorld('hub', {
   monitorStop: call('monitor:stop'),
   restartAccount: call('account:restart'),
   clearAccountCache: call('account:clearCache'),
+  setWindowsProcesses: call('winproc:enable'),
+  killWindowsProcess: call('winproc:kill'),
   onMonitorSample: listen('monitor:sample'),
   onHotkey: listen('hotkey'),
   onFullscreen: listen('fullscreen')

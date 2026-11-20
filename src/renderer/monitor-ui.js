@@ -1,5 +1,5 @@
 'use strict';
-/* global HubIcon */
+/* global HubIcon, HubWinProc */
 // Tela Monitor: graficos e numeros em tempo real da maquina, das contas e dos processos internos do IdleHub.
 // O historico fica so na memoria desta tela (5 minutos) e some ao fechar o app.
 (function () {
@@ -122,6 +122,7 @@
     const accEmpty = el('p', 'mon-empty');
 
     const hInternals = sectionHeader('layers');
+    const winproc = HubWinProc({ t, el, fmt: { pct, bytes }, actions, sectionHeader });
     const internals = el('div', 'mon-internals');
     const foot = el('footer', 'mon-foot');
     const live = el('p');
@@ -130,7 +131,7 @@
     footText.append(live, cost);
     foot.append(HubIcon('info'), footText);
 
-    root.append(hMachine.box, cards, hAccounts.box, table, accEmpty, hInternals.box, internals, foot);
+    root.append(hMachine.box, cards, hAccounts.box, table, accEmpty, hInternals.box, internals, winproc.box, foot);
 
     // ---------- linhas das contas (criadas uma vez, atualizadas no lugar) ----------
     const rows = new Map();
@@ -196,6 +197,7 @@
       accEmpty.textContent = t('noAccountsMonitor');
       hInternals.title.textContent = t('internals');
       hInternals.meta.replaceChildren(el('span', 'mon-meta-text', t('internalsText')));
+      winproc.renderTexts();
       for (const [key, c] of Object.entries(card)) {
         const two = key !== 'disk';
         c.legend.replaceChildren(
@@ -299,12 +301,14 @@
         return item;
       }));
 
+      if (record) winproc.update(sample.windows);
       cost.textContent = t('monitorCost', { ms: nf(2).format(sample.costMs) });
     }
 
     renderTexts();
     return {
       update,
+      reset: () => winproc.reset(),
       renderTexts() { renderTexts(); if (last) update(last, false); }
     };
   };

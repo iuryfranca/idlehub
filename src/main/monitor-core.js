@@ -60,4 +60,52 @@ function accountFromStoragePath(storagePath) {
   return m ? m[1] : null;
 }
 
-module.exports = { cpuTotals, cpuPercent, fromPdh, classifyProcess, accountFromStoragePath, clampPct };
+// ---------- processos do Windows ----------
+// Processos que o IdleHub nunca encerra: encerrar qualquer um deles derruba a sessao, trava o Windows
+// ou simplesmente falha por falta de permissao. Comparacao sem diferenciar maiusculas.
+const PROTECTED_NAMES = new Set([
+  'system', 'idle', 'registry', 'memory compression', 'secure system', 'smss', 'csrss', 'wininit', 'winlogon',
+  'services', 'lsass', 'lsaiso', 'svchost', 'fontdrvhost', 'dwm', 'explorer', 'sihost', 'ctfmon', 'taskhostw',
+  'runtimebroker', 'startmenuexperiencehost', 'searchhost', 'shellexperiencehost', 'textinputhost',
+  'msmpeng', 'nissrv', 'securityhealthservice', 'securityhealthsystray', 'mpdefendercoreservice',
+  'audiodg', 'spoolsv', 'wudfhost', 'dllhost', 'conhost', 'wmiprvse', 'lsm', 'userinit'
+]);
+
+/**
+ * Motivo para nao deixar encerrar um processo, ou null se pode.
+ * @param {{ pid: number, name: string }} proc
+ * @param {{ appPids: Set<number>, ownPids: Set<number> }} ctx  appPids: processos do IdleHub; ownPids: o proprio coletor etc.
+ */
+function protectReason(proc, ctx) {
+  if (!proc || proc.pid <= 4) return 'system';
+  if (ctx.appPids.has(proc.pid) || ctx.ownPids.has(proc.pid)) return 'app';
+  if (PROTECTED_NAMES.has(String(proc.name || '').toLowerCase())) return 'system';
+  return null;
+}
+
+// Lista crua do coletor -> lista para a tela, com o motivo de protecao ja calculado.
+function prepareProcesses(raw, ctx) {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((p) => p && Number.isInteger(p.p) && p.p > 0)
+    .map((p) => {
+      const proc = { pid: p.p, name: String(p.n || ''), desc: String(p.d || ''), path: String(p.f || ''), cpu: clampPct(p.c), mem: Number.isFinite(p.m) ? p.m : 0 };
+      proc.protected = protectReason(proc, ctx);
+      return proc;
+    });
+}
+
+// Confere, na hora de encerrar, que o PID ainda e o mesmo programa que a pessoa viu e confirmou
+// (o Windows reaproveita PIDs) e que ele nao e protegido.
+function checkKill(request, current, ctx) {
+  const pid = Number(request && request.pid);
+  if (!Number.isInteger(pid) || pid <= 0) return { ok: false, reason: 'invalid' };
+  const proc = current.find((p) => p.pid === pid);
+  if (!proc) return { ok: false, reason: 'gone' };
+  if (proc.name.toLowerCase() !== String(request.name || '').toLowerCase()) return { ok: false, reason: 'changed' };
+  const why = protectReason(proc, ctx);
+  if (why) return { ok: false, reason: 'protected' };
+  return { ok: true, proc };
+}
+
+module.exports = { cpuTotals, cpuPercent, fromPdh, classifyProcess, accountFromStoragePath, clampPct, protectReason, prepareProcesses, checkKill, PROTECTED_NAMES };

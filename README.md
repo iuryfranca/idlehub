@@ -80,10 +80,19 @@ Abra pela lateral (**Monitor**). Atualiza a cada segundo, com gráficos dos últ
   recarregar, silenciar, hibernar/acordar, limpar cache (mantém o login) e **encerrar processo** (com confirmação;
   use quando a conta travar: o painel recarrega sozinho e as outras contas não são afetadas).
 - **Por dentro do IdleHub:** os processos que o próprio app usa (principal, interface, GPU, rede), explicados.
+- **Processos do Windows** (desligado por padrão; ligue no switch da seção): todos os programas em execução, com
+  descrição, PID, CPU e memória. Dá para buscar (nome, descrição ou PID), ordenar por qualquer coluna e ocultar os
+  protegidos. **Encerrar** pede confirmação com nome, PID e memória e avisa que trabalho não salvo é perdido.
+  - **Protegidos (cadeado, sem botão):** processos essenciais do Windows (`csrss`, `lsass`, `winlogon`, `svchost`,
+    `dwm`, `explorer`, antivírus…), os do próprio IdleHub e o coletor do Monitor.
+  - **Conferência na hora:** ao confirmar, o processo principal verifica de novo se aquele PID ainda é o mesmo programa
+    (o Windows reaproveita PIDs) e se ele não é protegido; se algo mudou, nada é encerrado.
+  - O app não pede permissão de administrador: processos de outros usuários ou do sistema o Windows simplesmente recusa.
+  - Ao sair da tela Monitor, a lista para de ser coletada e volta desligada.
 
 Como os números são obtidos:
 - CPU e memória vêm do próprio Electron (`app.getAppMetrics()`) e do Node (`os`). Cada leitura custa cerca de 1 ms.
-- GPU, disco e rede vêm dos contadores de desempenho do Windows (API PDH), lidos por um pequeno processo PowerShell
+- GPU, disco, rede e a lista de processos vêm dos contadores de desempenho do Windows (API PDH), lidos por um pequeno processo PowerShell
   (`src/main/perf-sampler.ps1`). Ele usa os nomes em inglês dos contadores, que funcionam em qualquer idioma do Windows.
   Ele só roda com a tela Monitor aberta e fecha sozinho se o IdleHub fechar.
 - A GPU aparece por app, não por conta: o Chromium desenha todos os painéis num único processo de GPU.
@@ -130,11 +139,11 @@ src/main/panels.js      política dos painéis: criação, sessões, popups, nav
 src/main/user-agent.js  User-Agent de Chrome comum (sem o token do Electron)
 src/main/store.js       estado + validação (tudo que vem da interface passa por normalize())
 src/main/monitor.js     coleta do Monitor (só com a tela aberta); monitor-core.js tem as contas puras e testadas
-src/main/perf-sampler.ps1  leitor dos contadores do Windows (GPU, disco, rede) via API PDH
+src/main/perf-sampler.ps1  leitor dos contadores do Windows (GPU, disco, rede, processos) via API PDH
 src/main/catalog.js     sugestões de jogos
 src/preload.js          ponte mínima (window.hub)
 src/renderer/           interface: index.html, styles.css, app.js, layout.js (cálculo puro), icons.js, i18n.js (traduções),
-                        monitor-ui.js (tela Monitor e gráficos)
+                        monitor-ui.js (tela Monitor e gráficos), winproc-ui.js (processos do Windows)
 src/renderer/m3/        tokens do Material 3 (tokens.css), cores geradas (colors.css) e a fonte Roboto Flex
 scripts/build-theme.mjs gera colors.css a partir das cores base (npm run theme)
 test/                   testes de store, layout, idioma, user-agent, contraste das cores e monitor (node --test)

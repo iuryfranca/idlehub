@@ -10,14 +10,26 @@ const core = require('./monitor-core');
 const SAMPLE_MS = 1000;
 const SAMPLER_SCRIPT = path.join(__dirname, 'perf-sampler.ps1');
 
-// GPU, disco e rede vem dos contadores do Windows (API PDH com nomes em ingles, que valem em qualquer idioma).
-// Um unico PowerShell fica rodando enquanto a tela esta aberta e sai sozinho se o IdleHub fechar.
+// GPU, disco, rede e (se ligado) a lista de processos vem dos contadores do Windows (API PDH com nomes em
+// ingles, que valem em qualquer idioma). Um unico PowerShell fica rodando enquanto a tela esta aberta e sai
+// sozinho se o IdleHub fechar.
 class WindowsCounters {
-  constructor() { this.latest = null; this.proc = null; this.available = process.platform === 'win32'; }
-  start() {
+  constructor() {
+    this.latest = null;
+    this.procs = null;      // lista crua de processos da ultima coleta (so com withProcesses)
+    this.procsAt = 0;
+    this.proc = null;
+    this.withProcesses = false;
+    this.available = process.platform === 'win32';
+  }
+  get pid() { return this.proc ? this.proc.pid : null; }
+  start(withProcesses = this.withProcesses) {
+    this.withProcesses = withProcesses;
     if (!this.available || this.proc) return;
     let script;
-    try { script = `$ParentPid = ${process.pid}\n` + fs.readFileSync(SAMPLER_SCRIPT, 'utf8'); } catch { this.available = false; return; }
+    try {
+      script = `$ParentPid = ${process.pid}\n$WithProcesses = $${withProcesses ? 'true' : 'false'}\n` + fs.readFileSync(SAMPLER_SCRIPT, 'utf8');
+    } catch { this.available = false; return; }
     const encoded = Buffer.from(script, 'utf16le').toString('base64');
     const proc = spawn('powershell.exe', ['-NoLogo', '-NoProfile', '-NonInteractive', '-EncodedCommand', encoded], { windowsHide: true });
     this.proc = proc;
@@ -29,13 +41,28 @@ class WindowsCounters {
       buffer = lines.pop();
       for (const line of lines) {
         if (!line.startsWith('{')) continue;
-        try { this.latest = core.fromPdh(JSON.parse(line)); } catch {}
+        try {
+          const raw = JSON.parse(line);
+          this.latest = core.fromPdh(raw);
+          if (Array.isArray(raw.procs)) { this.procs = raw.procs; this.procsAt = Date.now(); }
+        } catch {}
       }
     });
     proc.on('error', () => { this.available = false; });
     proc.on('exit', (code) => { if (this.proc === proc) { this.proc = null; if (code && !this.latest) this.available = false; } });
   }
-  stop() { if (this.proc) { try { this.proc.kill(); } catch {} this.proc = null; } this.latest = null; }
+  stop() {
+    if (this.proc) { try { this.proc.kill(); } catch {} this.proc = null; }
+    this.latest = null; this.procs = null;
+  }
+  // Liga/desliga a lista de processos reiniciando o coletor (a lista custa um pouco mais por coleta).
+  setProcesses(on) {
+    if (on === this.withProcesses) return;
+    const running = !!this.proc;
+    this.stop();
+    this.withProcesses = on;
+    if (running) this.start(on);
+  }
 }
 
 /**
@@ -59,6 +86,22 @@ function createMonitor(deps) {
       if (!map.has(pid) || accountId) map.set(pid, { accountId, kind });
     }
     return map;
+  }
+
+  // Processos que nunca podem ser encerrados por esta tela: os do IdleHub e o proprio coletor.
+  function protectionContext() {
+    const ownPids = new Set([process.pid]);
+    if (counters.pid) ownPids.add(counters.pid);
+    return { appPids: new Set(app.getAppMetrics().map((m) => m.pid)), ownPids };
+  }
+
+  function windowsProcesses() {
+    if (!counters.withProcesses) return null;
+    return {
+      ready: !!counters.procs,
+      at: counters.procsAt,
+      list: counters.procs ? core.prepareProcesses(counters.procs, protectionContext()) : []
+    };
   }
 
   function sample() {
@@ -96,6 +139,7 @@ function createMonitor(deps) {
       },
       app: { cpu: core.clampPct(sum('cpu')), mem: sum('mem'), gpu: processes.some((p) => p.gpu != null) ? core.clampPct(sum('gpu')) : null },
       processes,
+      windows: windowsProcesses(),
       costMs: Number(process.hrtime.bigint() - started) / 1e6
     });
   }
@@ -111,6 +155,21 @@ function createMonitor(deps) {
     stop() {
       clearInterval(timer); timer = null;
       counters.stop();
+      counters.withProcesses = false; // ao reabrir a tela, a lista de processos comeca desligada de novo
+    },
+    setWindowsProcesses(on) { counters.setProcesses(!!on); return counters.withProcesses; },
+    // Encerra um processo do Windows depois de conferir de novo, agora, que o PID ainda e o mesmo programa
+    // que a pessoa confirmou e que ele nao e protegido.
+    killWindowsProcess(request) {
+      if (!counters.withProcesses || !counters.procs) return { ok: false, reason: 'gone' };
+      const check = core.checkKill(request, core.prepareProcesses(counters.procs, protectionContext()), protectionContext());
+      if (!check.ok) return check;
+      try {
+        process.kill(check.proc.pid); // no Windows: TerminateProcess
+        return { ok: true };
+      } catch (e) {
+        return { ok: false, reason: e.code === 'EPERM' ? 'denied' : e.code === 'ESRCH' ? 'gone' : 'error' };
+      }
     },
     // Encerra o processo do painel de uma conta. O watchdog de panels.js recarrega o painel logo em seguida.
     restartAccount(accountId) {
