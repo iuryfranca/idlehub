@@ -11,12 +11,63 @@
     "theme": "node scripts/build-theme.mjs",
     "screens": "node scripts/capture-screens.js",
     "icon": "electron scripts/build-icon.js",
-    "atalho": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/criar-atalho.ps1"
+    "atalho": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/criar-atalho.ps1",
+    "dist": "electron-builder --win nsis --publish never"
   },
   "license": "MIT",
   "devDependencies": {
     "@fontsource-variable/roboto-flex": "5.3.0",
     "@material/material-color-utilities": "0.3.0",
-    "electron": "43.8.12"
+    "electron": "43.8.12",
+    "electron-builder": "26.18.0"
+  },
+  "author": "Iury França",
+  "homepage": "https://github.com/iuryfranca/idlehub",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/iuryfranca/idlehub.git"
+  },
+  "build": {
+    "appId": "io.github.iuryfranca.idlehub",
+    "productName": "IdleHub",
+    "copyright": "© 2026 Iury França · MIT",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "package.json",
+      "src/**/*",
+      "build/icon.ico",
+      "build/icon.png",
+      "LICENSE",
+      "NOTICE.md"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowElevation": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "IdleHub",
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "license": "LICENSE",
+      "artifactName": "IdleHub-Setup-${version}.exe",
+      "deleteAppDataOnUninstall": false
+    },
+    "publish": null
   }
 }

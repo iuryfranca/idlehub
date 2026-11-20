@@ -9,11 +9,11 @@ Site estático de uma página só (`index.html` + `styles.css`), feito para o Gi
 - **Telas:** `assets/screens/` traz capturas reais do app com uma página de jogo de demonstração (fictícia).
   Para refazer depois de mudar a interface: `npm run screens` na raiz do repositório.
 
-## Antes de publicar
+## Publicação
 
-1. Os links já apontam para `https://github.com/iuryfranca/idlehub` (3 em `index.html`).
-2. O botão "Baixar para Windows" aponta para `.../releases/latest`: publique um Release com o instalador antes.
-3. No GitHub: Settings → Pages → Source "GitHub Actions" (ou "Deploy from a branch" apontando para esta pasta).
+- O site é publicado no GitHub Pages pelo fluxo `.github/workflows/pages.yml`, a cada push na `main` que mexe nesta pasta.
+- Os links apontam para `https://github.com/iuryfranca/idlehub` (3 em `index.html`); "Baixar para Windows" abre o
+  Release mais recente, onde fica o instalador.
 
 ## Abrir localmente
 

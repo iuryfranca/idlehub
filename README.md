@@ -41,7 +41,16 @@ Como o código é aberto, qualquer pessoa pode repetir essa verificação.
 
 ## Baixar e abrir
 
-Requisitos: Windows 10/11 e [Node.js](https://nodejs.org/) 24 ou mais recente.
+**Instalador (Windows 10/11, 64 bits):** baixe o `IdleHub-Setup-<versão>.exe` na
+[página de Releases](https://github.com/iuryfranca/idlehub/releases/latest) e abra. A instalação é só para o seu
+usuário (não pede administrador) e cria atalhos na área de trabalho e no menu Iniciar.
+
+O instalador **não tem assinatura digital** (um certificado de assinatura custa caro para um projeto de estudo), então o
+Windows pode mostrar "O Windows protegeu o computador". Clique em **Mais informações → Executar assim mesmo**. Se
+preferir conferir antes, compare o SHA-256 do arquivo (`Get-FileHash .\IdleHub-Setup-<versão>.exe`) com o que está
+na página do Release, ou rode pelo código-fonte, abaixo.
+
+**Pelo código-fonte:** requer [Node.js](https://nodejs.org/) 24 ou mais recente.
 
 ```powershell
 git clone https://github.com/iuryfranca/idlehub.git   # ou "Download ZIP" na página do repositório
@@ -50,6 +59,8 @@ npm install            # baixa o Electron (uma vez)
 npm start              # ou dois cliques em "Abrir IdleHub.bat"
 npm run atalho         # opcional: cria o atalho "IdleHub" na área de trabalho, com o ícone do app
 ```
+
+Para gerar o instalador você mesmo: `npm run dist` (sai em `dist/`).
 
 ## O que já faz
 
