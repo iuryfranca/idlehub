@@ -2,7 +2,8 @@
 // Uso: npm run store-logos  ->  docs/store/screens/{.,en,es}/store-*.png
 //  - icone do bloco 1:1 (300, 150, 71) com fundo transparente;
 //  - arte de caixa 1:1 (1080, 2160) e poster 9:16 (720x1080, 1440x2160): icone sobre fundo escuro com brilho Aurora;
-//    o poster leva o nome "IdleHub" na Roboto Flex (a mesma fonte do app).
+//    o poster leva o nome "IdleHub" na Roboto Flex (a mesma fonte do app);
+//  - arte de super-heroi 16:9 (1920x1080, 3840x2160): faixa do topo da pagina na Store do Windows.
 const { app, BrowserWindow } = require('electron');
 const fs = require('fs');
 const path = require('path');
@@ -20,7 +21,9 @@ const IMAGES = [
   ['store-boxart-1080.png', 1080, 1080, 'box'],
   ['store-boxart-2160.png', 2160, 2160, 'box'],
   ['store-poster-720x1080.png', 720, 1080, 'poster'],
-  ['store-poster-1440x2160.png', 1440, 2160, 'poster']
+  ['store-poster-1440x2160.png', 1440, 2160, 'poster'],
+  ['store-hero-1920x1080.png', 1920, 1080, 'hero'],
+  ['store-hero-3840x2160.png', 3840, 2160, 'hero']
 ];
 
 app.whenReady().then(async () => {
@@ -49,7 +52,14 @@ app.whenReady().then(async () => {
       x.fillStyle = 'rgba(255,255,255,.07)';
       const step = Math.round(W / 40), r = Math.max(1, W / 900);
       for (let yy = step / 2; yy < H; yy += step) for (let xx = step / 2; xx < W; xx += step) { x.beginPath(); x.arc(xx, yy, r, 0, 7); x.fill(); }
-      if (kind === 'box') {
+      if (kind === 'hero') {
+        // arte de super-heroi 16:9: icone a esquerda e o nome ao lado, centralizados
+        const s = H * 0.36; x.font = '600 ' + Math.round(H * 0.2) + 'px "Roboto Flex"';
+        const tw = x.measureText('IdleHub').width, gap = H * 0.07, total = s + gap + tw, x0 = (W - total) / 2;
+        x.drawImage(icon, x0, (H - s) / 2, s, s);
+        x.fillStyle = '#e6e1e9'; x.textAlign = 'left'; x.textBaseline = 'middle';
+        x.fillText('IdleHub', x0 + s + gap, H / 2 + H * 0.01);
+      } else if (kind === 'box') {
         const s = W * 0.52; x.drawImage(icon, (W - s) / 2, (H - s) / 2, s, s);
       } else {
         const s = W * 0.56; x.drawImage(icon, (W - s) / 2, H * 0.3, s, s);
