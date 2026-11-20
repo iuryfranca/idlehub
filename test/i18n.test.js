@@ -24,7 +24,7 @@ test('nenhuma traducao vazia e as variaveis {x} batem entre idiomas', () => {
 test('toda chave usada na interface existe no dicionario', () => {
   const dir = path.join(__dirname, '..', 'src', 'renderer');
   const html = fs.readFileSync(path.join(dir, 'index.html'), 'utf8');
-  const js = ['app.js', 'monitor-ui.js', 'winproc-ui.js', 'game-hub.js'].map((f) => fs.readFileSync(path.join(dir, f), 'utf8')).join('\n');
+  const js = ['app.js', 'monitor-ui.js', 'winproc-ui.js', 'game-hub.js', 'mix-editor.js'].map((f) => fs.readFileSync(path.join(dir, f), 'utf8')).join('\n');
   const cap = (s) => s[0].toUpperCase() + s.slice(1);
   const used = new Set([
     ...[...html.matchAll(/data-i18n(?:-title|-aria|-placeholder)?="(\w+)"/g)].map((m) => m[1]),

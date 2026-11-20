@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="m3/colors.css">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="game-hub.css">
+  <link rel="stylesheet" href="mix.css">
 </head>
 <body>
   <!-- Textos ficam vazios aqui: o app.js preenche pelo dicionario do idioma escolhido (data-i18n*). -->
@@ -27,11 +28,15 @@
       <div class="section-label" data-i18n="games"></div>
       <nav class="game-list" id="gameList"></nav>
 
+      <div class="section-label" data-i18n="mixes"></div>
+      <nav class="game-list" id="mixList"></nav>
+      <button class="mix-new state" id="newMix" type="button" data-i18n-title="newMixHint"><span class="btn-icon"></span><span class="label" data-i18n="newMix"></span></button>
+
       <div class="accounts" id="accountsSection">
         <hr class="divider">
         <div class="section-label" id="accountsLabel"></div>
         <ul class="account-list" id="accountList"></ul>
-        <button class="tonal-btn state" id="addAccount" type="button"><span class="btn-icon"></span><span data-i18n="newAccount"></span></button>
+        <button class="tonal-btn state" id="addAccount" type="button"><span class="btn-icon"></span><span id="addAccountLabel"></span></button>
       </div>
 
       <div class="drawer-foot">
@@ -127,6 +132,36 @@
     </div>
   </dialog>
 
+  <!-- Editor de espaco misto (contas de jogos diferentes nas mesmas telas). Montado pelo mix-editor.js. -->
+  <dialog class="hub-dialog mix-dialog" id="mixDialog" data-i18n-aria="newMix">
+    <form id="mixForm" class="mix-form" autocomplete="off">
+      <div class="hub-head">
+        <div class="hub-heading">
+          <h2 id="mixTitle"></h2>
+          <p data-i18n="mixSubtitle"></p>
+        </div>
+        <button class="icon-btn state" id="mixClose" type="button" data-i18n-title="close"></button>
+      </div>
+      <label class="field mix-name-field">
+        <span data-i18n="mixName"></span>
+        <input id="mixName" maxlength="40" spellcheck="false">
+      </label>
+      <div class="hub-scroll mix-body" id="mixBody"></div>
+      <div class="mix-foot">
+        <div class="mix-preview" id="mixPreview" data-i18n-aria="mixPreview" role="img"></div>
+        <div class="mix-foot-text">
+          <span class="mix-count" id="mixCount"></span>
+          <p class="field-error" id="mixError"></p>
+        </div>
+        <div class="mix-actions">
+          <button type="button" class="btn text danger state" id="mixDelete" data-i18n="mixDelete"></button>
+          <button type="button" class="btn text state" id="mixCancel" data-i18n="cancel"></button>
+          <button type="submit" class="btn filled state" id="mixOk"></button>
+        </div>
+      </div>
+    </form>
+  </dialog>
+
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="i18n.js"></script>
@@ -134,6 +169,7 @@
   <script src="icons.js"></script>
   <script src="skeleton.js"></script>
   <script src="game-hub.js"></script>
+  <script src="mix-editor.js"></script>
   <script src="winproc-ui.js"></script>
   <script src="monitor-ui.js"></script>
   <script src="app.js"></script>

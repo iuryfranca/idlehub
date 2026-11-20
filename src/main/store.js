@@ -4,7 +4,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-const LIMITS = Object.freeze({ games: 40, accountsPerGame: 9, name: 40 });
+const LIMITS = Object.freeze({ games: 40, accountsPerGame: 9, name: 40, mixes: 20, accountsPerMix: 9 });
 const ASPECTS = Object.freeze(['livre', '16:9', '4:3', '3:2', '9:16']);
 const LAYOUTS = Object.freeze(['grade', 'destaque']);
 const THEMES = Object.freeze(['grafite', 'aurora', 'oceano', 'areia', 'papel']);
@@ -38,7 +38,7 @@ function cleanUrl(raw) {
 }
 
 function emptyState() {
-  return { version: 1, games: [], accounts: [], prefs: { theme: 'grafite', mode: 'sistema', lang: null, drawer: true, muted: false, activeGame: null } };
+  return { version: 1, games: [], accounts: [], mixes: [], prefs: { theme: 'grafite', mode: 'sistema', lang: null, drawer: true, muted: false, activeGame: null, activeMix: null } };
 }
 
 // Recebe qualquer coisa e devolve um estado valido; o que nao passa e descartado em silencio.
@@ -80,6 +80,25 @@ function normalize(input) {
     if (g.featured && !out.accounts.some((a) => a.id === g.featured && a.gameId === g.id)) g.featured = null;
   }
 
+  // Espacos mistos: contas escolhidas de jogos diferentes, na ordem das telas.
+  // Conta removida sai do espaco; um espaco pode ficar vazio (o usuario escolhe outras contas depois).
+  const mixIds = new Set();
+  for (const m of Array.isArray(src.mixes) ? src.mixes : []) {
+    if (out.mixes.length >= LIMITS.mixes) break;
+    if (!m || !ID.test(m.id) || mixIds.has(m.id) || gameIds.has(m.id)) continue;
+    const name = cleanName(m.name);
+    if (!name) continue;
+    const accounts = [...new Set(Array.isArray(m.accounts) ? m.accounts : [])].filter((id) => accIds.has(id)).slice(0, LIMITS.accountsPerMix);
+    mixIds.add(m.id);
+    out.mixes.push({
+      id: m.id, name, accounts,
+      aspect: pick(m.aspect, ASPECTS, 'livre'),
+      layout: pick(m.layout, LAYOUTS, 'grade'),
+      featured: accounts.includes(m.featured) ? m.featured : null,
+      split: Math.round(clamp(Number(m.split), SPLIT.min, SPLIT.max, SPLIT.initial) * 1000) / 1000
+    });
+  }
+
   const p = src.prefs && typeof src.prefs === 'object' ? src.prefs : {};
   out.prefs.theme = pick(p.theme, THEMES, 'grafite');
   out.prefs.mode = pick(p.mode, MODES, 'sistema');
@@ -87,6 +106,7 @@ function normalize(input) {
   out.prefs.drawer = p.drawer !== false;
   out.prefs.muted = p.muted === true;
   out.prefs.activeGame = gameIds.has(p.activeGame) ? p.activeGame : (out.games[0]?.id ?? null);
+  out.prefs.activeMix = mixIds.has(p.activeMix) ? p.activeMix : null; // com um espaco ativo, ele aparece no lugar do jogo
   return out;
 }
 

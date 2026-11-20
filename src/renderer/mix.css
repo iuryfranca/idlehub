@@ -1,0 +1,97 @@
+/* =====================================================================
+   ESPACOS MISTOS: contas de jogos diferentes nas mesmas telas
+   ===================================================================== */
+
+/* lateral: botao "Novo espaco misto" (estilo de item de navegacao, discreto) */
+.mix-new {
+  display: flex; align-items: center; gap: var(--space-3); width: 100%; height: 48px; padding: 0 var(--space-6) 0 var(--space-4);
+  border: 1px dashed var(--md-sys-color-outline-variant); border-radius: var(--md-sys-shape-corner-full); background: transparent;
+  color: var(--md-sys-color-primary); text-align: left;
+  font: var(--md-sys-typescale-label-large); letter-spacing: var(--md-sys-typescale-label-large-tracking);
+}
+.mix-new .ico { width: 20px; height: 20px; margin-inline: 4px; }
+.mix-new .label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.drawer-closed .mix-new { width: 56px; height: 32px; padding: 0; justify-content: center; margin: var(--space-2) auto 0; }
+.drawer-closed .mix-new .label { display: none; }
+
+/* icone do espaco: mosaico 2x2 com os icones dos jogos */
+.tile.mix-tile {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 2px; padding: 3px; border-radius: var(--md-sys-shape-corner-small);
+  background: var(--md-sys-color-tertiary-container);
+}
+.mix-q {
+  display: grid; place-items: center; min-width: 0; overflow: hidden; border-radius: 3px;
+  background: var(--md-sys-color-surface); color: var(--md-sys-color-on-surface); font: 600 8px/1 var(--md-ref-typeface-plain, inherit);
+}
+.mix-q img { width: 100%; height: 100%; object-fit: contain; }
+.nav-item.active .tile.mix-tile { background: var(--md-sys-color-primary); }
+
+/* contas do espaco na lateral: apelido + jogo */
+.account-name small.account-game { display: block; margin-top: -2px; font: var(--md-sys-typescale-body-small); color: var(--md-sys-color-on-surface-variant); }
+.account-name span { display: block; overflow: hidden; text-overflow: ellipsis; }
+.account-name:has(.account-game) { padding-block: var(--space-1); }
+
+/* paineis: nome do jogo ao lado do apelido, so num espaco misto */
+.pgame { display: none; }
+.stage.mixed .pgame {
+  display: inline-flex; flex: none; max-width: 40%; height: 22px; align-items: center; padding: 0 var(--space-2);
+  border-radius: var(--md-sys-shape-corner-small); background: var(--md-sys-color-tertiary-container); color: var(--md-sys-color-on-tertiary-container);
+  font: var(--md-sys-typescale-label-medium); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.stage.mixed .pname { flex: 0 1 auto; }
+.stage.mixed .pactions { margin-left: auto; }
+
+/* ---------- editor ---------- */
+.mix-dialog { width: min(780px, calc(100vw - 48px)); height: fit-content; max-height: min(820px, calc(100vh - 64px)); }
+.mix-form { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.mix-name-field { margin: 0 var(--space-6) var(--space-4); }
+.mix-body { display: flex; flex-direction: column; gap: var(--space-4); padding-bottom: var(--space-4); }
+
+.mix-group { display: flex; flex-direction: column; gap: var(--space-2); }
+.mix-group-head { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
+.mix-group-name { font: var(--md-sys-typescale-title-small); color: var(--md-sys-color-on-surface); white-space: nowrap; }
+.mix-group-host { font: var(--md-sys-typescale-body-small); color: var(--md-sys-color-on-surface-variant); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mix-accs { display: flex; flex-wrap: wrap; gap: var(--space-2); padding-left: 40px; }
+
+/* conta: filter chip do M3, com o numero da tela quando escolhida */
+.mix-acc {
+  display: inline-flex; align-items: center; gap: var(--space-2); height: 36px; padding: 0 var(--space-4) 0 6px;
+  border: 1px solid var(--md-sys-color-outline-variant); border-radius: var(--md-sys-shape-corner-small);
+  background: transparent; color: var(--md-sys-color-on-surface-variant);
+  font: var(--md-sys-typescale-label-large); letter-spacing: var(--md-sys-typescale-label-large-tracking);
+}
+.mix-acc[aria-pressed="true"] { border-color: transparent; background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }
+.mix-order {
+  display: grid; place-items: center; width: 24px; height: 24px; border-radius: var(--md-sys-shape-corner-full);
+  background: var(--md-sys-color-surface-container-highest); font: var(--md-sys-typescale-label-medium);
+}
+.mix-order .ico { width: 16px; height: 16px; }
+.mix-acc[aria-pressed="true"] .mix-order { background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); }
+.mix-acc-name { white-space: nowrap; }
+.mix-acc-flag { display: flex; opacity: .7; }
+.mix-acc-flag .ico { width: 16px; height: 16px; }
+
+/* rodape: previa ao vivo + contagem + acoes */
+.mix-foot {
+  display: flex; align-items: center; gap: var(--space-4); padding: var(--space-4) var(--space-6);
+  border-top: 1px solid var(--md-sys-color-outline-variant); background: var(--md-sys-color-surface-container);
+}
+.mix-preview {
+  position: relative; flex: none; width: 176px; height: 99px; border-radius: var(--md-sys-shape-corner-small);
+  background: var(--md-sys-color-surface-container-highest); overflow: hidden;
+}
+.mix-preview-empty { position: absolute; inset: 0; display: grid; place-items: center; font: var(--md-sys-typescale-label-small); color: var(--md-sys-color-on-surface-variant); }
+.mix-cell {
+  position: absolute; display: grid; place-items: center; border-radius: 4px;
+  background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container);
+  transition: all var(--md-sys-motion-duration-medium) var(--md-sys-motion-easing-emphasized-decelerate);
+}
+.mix-cell-icon { display: grid; place-items: center; min-width: 18px; height: 18px; padding: 0 2px; border-radius: 4px; overflow: hidden; font: 600 8px/1 inherit; background: var(--md-sys-color-surface); }
+.mix-cell-icon img { width: 100%; height: 100%; object-fit: contain; }
+.mix-cell-n { position: absolute; top: 2px; left: 4px; font: var(--md-sys-typescale-label-small); }
+.mix-foot-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--space-1); }
+.mix-count { font: var(--md-sys-typescale-title-small); color: var(--md-sys-color-on-surface); }
+.mix-actions { display: flex; gap: var(--space-2); }
+.mix-actions .btn[hidden] { display: none; }
+
+@media (prefers-reduced-motion: reduce) { .mix-cell { transition: none; } }

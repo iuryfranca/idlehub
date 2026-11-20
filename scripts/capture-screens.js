@@ -16,21 +16,25 @@ fs.mkdirSync(OUT, { recursive: true });
 
 const games = [
   { id: 'g-reino', name: 'Reino Ocioso', url: 'https://example.com/' },
-  { id: 'g-minas', name: 'Minas de Cristal', url: 'https://example.org/' }
+  { id: 'g-minas', name: 'Minas de Cristal', url: 'https://example.org/' },
+  { id: 'g-forja', name: 'Forja Estelar', url: 'https://example.net/' }
 ];
 const accounts = [
   { id: 'a-1', gameId: 'g-reino', name: 'Principal' },
   { id: 'a-2', gameId: 'g-reino', name: 'Farm 01', muted: true },
   { id: 'a-3', gameId: 'g-reino', name: 'Farm 02' },
   { id: 'a-4', gameId: 'g-reino', name: 'Alt' },
-  { id: 'a-5', gameId: 'g-minas', name: 'Conta 1' }
+  { id: 'a-5', gameId: 'g-minas', name: 'Conta 1' },
+  { id: 'a-6', gameId: 'g-forja', name: 'Main' }
 ];
+// Espaco misto de demonstracao: 4 telas de 3 jogos.
+const MIX = { id: 'm-noite', name: 'Farm da noite', accounts: ['a-1', 'a-5', 'a-6', 'a-3'], layout: 'grade', aspect: 'livre', featured: null, split: 0.68 };
 
 // Pagina de jogo de demonstracao (ficticia), diferente por conta.
 const DEMO = `(i) => {
   const zones = ['Floresta Sombria', 'Pântano de Névoa', 'Ruínas de Âmbar', 'Picos Gelados', 'Mina Profunda'];
   const foes = ['Slime Ancestral', 'Lobo de Névoa', 'Golem de Âmbar', 'Wyrm Gélido', 'Verme de Cristal'];
-  const lvl = [42, 37, 35, 18, 9][i] || 12, gold = ['1,24 M', '860 K', '792 K', '41 K', '9,6 K'][i], hp = [64, 22, 81, 47, 90][i];
+  const lvl = [42, 37, 35, 18, 9, 27][i] || 12, gold = ['1,24 M', '860 K', '792 K', '41 K', '9,6 K', '318 K'][i] || '58 K', hp = [64, 22, 81, 47, 90, 58][i] || 50;
   return '<style>*{box-sizing:border-box;margin:0}body{font:14px/1.4 Georgia,serif;color:#f3e9d2;background:radial-gradient(circle at 70% 20%,#3b4a2a,#14190f 70%);height:100vh;display:flex;flex-direction:column;gap:14px;padding:18px;overflow:hidden}'
    + '.top{display:flex;justify-content:space-between;align-items:center}.zone{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:#c9b98a}'
    + '.res{display:flex;gap:10px}.res span{background:#0008;border:1px solid #6b5a33;border-radius:999px;padding:4px 12px;font-weight:bold}'
@@ -50,12 +54,12 @@ function inject(extra = '') {
       const panels = [...document.querySelectorAll('.panel')];
       for (const p of panels) {
         const wv = p.querySelector('webview'); if (!wv) continue;
-        const i = ['a-1','a-2','a-3','a-4','a-5'].indexOf(p.dataset.id);
+        const i = ['a-1','a-2','a-3','a-4','a-5','a-6'].indexOf(p.dataset.id);
         try { await wv.executeJavaScript('document.documentElement.innerHTML = ' + JSON.stringify(demo(i)) + ';'); } catch (e) {}
       }
     };
     await w(1500); await fill();
-    const host = document.getElementById('gameHost'); if (host) host.textContent = 'jogo de demonstração';
+    const host = document.getElementById('gameHost'); if (host && !document.getElementById('stage').classList.contains('mixed')) host.textContent = 'jogo de demonstração';
     ${extra}
     await w(600);
     const d = document.documentElement.dataset; return { theme: d.theme, mode: d.mode, lateralRecolhida: document.getElementById('shell').classList.contains('drawer-closed'), monitor: !document.getElementById('monitor').hidden, hibernadas: document.querySelectorAll('.sleep-card').length, userData: (await hub.load()).state.prefs };
@@ -69,6 +73,13 @@ const shots = [
   { file: 'hibernate-dark', prefs: { theme: 'aurora', mode: 'escuro', drawer: true }, game: { layout: 'grade' }, hibernate: 'a-2' },
   { file: 'monitor-dark', prefs: { theme: 'aurora', mode: 'escuro', drawer: true }, game: { layout: 'grade' },
     extra: "document.getElementById('navMonitor').click(); await w(9000);" },
+  // hub de jogos: catalogo com logos (Adicionar jogo)
+  { file: 'hub-dark', prefs: { theme: 'aurora', mode: 'escuro', drawer: true }, game: { layout: 'grade' },
+    extra: "document.getElementById('addGame').click(); await w(1200);" },
+  // espaco misto: editor com 4 contas de 3 jogos escolhidas, e o espaco pronto na tela
+  { file: 'mix-editor-dark', prefs: { theme: 'aurora', mode: 'escuro', drawer: true }, game: { layout: 'grade' },
+    extra: "document.getElementById('newMix').click(); await w(400); document.getElementById('mixName').value = 'Farm da noite'; for (const id of ['Principal', 'Conta 1', 'Main', 'Farm 02']) { [...document.querySelectorAll('.mix-acc')].find((b) => b.textContent.endsWith(id)).click(); await w(150); }" },
+  { file: 'mix-dark', prefs: { theme: 'aurora', mode: 'escuro', drawer: true, activeMix: 'm-noite' }, game: { layout: 'grade' }, mixes: [MIX] },
   { file: 'themes-grafite', prefs: { theme: 'grafite', mode: 'escuro', drawer: true }, game: { layout: 'grade' } },
   { file: 'themes-aurora', prefs: { theme: 'aurora', mode: 'escuro', drawer: true }, game: { layout: 'grade' } },
   { file: 'themes-oceano', prefs: { theme: 'oceano', mode: 'escuro', drawer: true }, game: { layout: 'grade' } },
@@ -83,6 +94,7 @@ for (const shot of shots) {
   const state = {
     games: games.map((g, i) => ({ ...g, zoom: 1, aspect: 'livre', layout: 'grade', featured: null, split: 0.68, ...(i === 0 ? shot.game : {}) })),
     accounts: accounts.map((a) => ({ muted: false, hibernated: a.id === shot.hibernate, ...a })),
+    mixes: shot.mixes || [],
     prefs: { lang: 'pt-BR', muted: false, activeGame: 'g-reino', ...shot.prefs }
   };
   fs.writeFileSync(path.join(ud, 'idlehub.json'), JSON.stringify(state));

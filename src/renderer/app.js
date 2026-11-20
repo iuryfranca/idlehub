@@ -1,5 +1,5 @@
 'use strict';
-/* global HubLayout, HubIcon, HubI18n, HubMonitor, HubSkeleton, HubGames, hub */
+/* global HubLayout, HubIcon, HubI18n, HubMonitor, HubSkeleton, HubGames, HubMixEditor, hub */
 (async function main() {
   const $ = (id) => document.getElementById(id);
   const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
@@ -29,6 +29,19 @@
   const game = () => S.games.find((g) => g.id === S.prefs.activeGame) || null;
   const accountsOf = (gameId) => S.accounts.filter((a) => a.gameId === gameId);
   const uid = (p) => p + '-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  const mix = () => (S.prefs.activeMix && S.mixes.find((m) => m.id === S.prefs.activeMix)) || null;
+  const gameOfAccount = (id) => { const a = S.accounts.find((x) => x.id === id); return a && S.games.find((g) => g.id === a.gameId); };
+
+  // "Espaco" na tela: um jogo (todas as contas dele) ou um espaco misto (contas escolhidas de varios jogos).
+  // Layout, destaque, divisoria e proporcao sao de cada espaco; o zoom continua sendo de cada jogo.
+  function space() {
+    const m = mix();
+    if (m) return { kind: 'mix', id: m.id, name: m.name, ids: m.accounts, layout: m.layout, featured: m.featured, split: m.split, aspect: m.aspect };
+    const g = game();
+    return g ? { kind: 'game', id: g.id, name: g.name, ids: accountsOf(g.id).map((a) => a.id), layout: g.layout, featured: g.featured, split: g.split, aspect: g.aspect } : null;
+  }
+  // O objeto do espaco dentro de um rascunho do estado (para gravar mudancas nele).
+  const spaceRef = (d, sp) => (sp.kind === 'mix' ? d.mixes : d.games).find((x) => x.id === sp.id);
 
   let saving = Promise.resolve();
   function commit(mutate) {
@@ -75,21 +88,25 @@
     const idx = el('span', 'pidx');
     const dot = el('span', 'status');
     const name = el('span', 'pname');
+    const gname = el('span', 'pgame'); // nome do jogo: so aparece num espaco misto
     const actions = el('div', 'pactions');
-    view.btnStar = panelButton('star', t('pinFeatured'), () => commit((d) => { const gg = d.games.find((x) => x.id === acc.gameId); gg.featured = acc.id; gg.layout = 'destaque'; }));
+    view.btnStar = panelButton('star', t('pinFeatured'), () => {
+      const sp = space();
+      if (sp) commit((d) => { const r = spaceRef(d, sp); if (r) { r.featured = acc.id; r.layout = 'destaque'; } });
+    });
     view.btnMute = panelButton('sound', t('muteAccount'), () => commit((d) => { const a = d.accounts.find((x) => x.id === acc.id); if (a) a.muted = !a.muted; }));
     view.btnReload = panelButton('reload', t('reload'), () => { try { view.wv.reload(); } catch {} });
     view.btnFocus = panelButton('expand', t('expand'), () => toggleFocus(acc.id));
     view.btnSleep = panelButton(acc.hibernated ? 'sun' : 'moon', '', () => toggleHibernate(acc.id));
     view.btnMute.hidden = view.btnReload.hidden = acc.hibernated;
     actions.append(view.btnStar, view.btnMute, view.btnReload, view.btnSleep, view.btnFocus);
-    head.append(idx, dot, name, actions);
+    head.append(idx, dot, name, gname, actions);
     head.addEventListener('dblclick', () => toggleFocus(acc.id));
 
     const body = el('div', 'panel-body');
     const frame = el('div', 'panel-frame');
     panel.append(head, body);
-    Object.assign(view, { el: panel, head, idx, dot, name, frame, wv: null });
+    Object.assign(view, { el: panel, head, idx, dot, name, gname, frame, wv: null });
 
     if (acc.hibernated) {
       // Conta hibernada: nenhum processo, so um cartao para acordar.
@@ -180,6 +197,7 @@
       if (!v) v = createView(acc, g);
       alive.add(acc.id);
       v.name.textContent = acc.name;
+      v.gname.textContent = g.name;
       const muted = S.prefs.muted || acc.muted;
       v.btnMute.replaceChildren(HubIcon(muted ? 'mute' : 'sound'));
       v.btnMute.setAttribute('aria-pressed', String(acc.muted));
@@ -195,25 +213,27 @@
   const splitter = el('div', 'splitter');
   $('stage').appendChild(splitter);
 
+  let liveSplit = null; // divisoria sendo arrastada (so grava ao soltar)
   function layoutStage() {
     const stage = $('stage');
-    const g = game();
-    const ids = g ? accountsOf(g.id).map((a) => a.id) : [];
+    const sp = space();
+    const ids = sp ? sp.ids : [];
     if (focusId && !ids.includes(focusId)) focusId = null;
+    stage.classList.toggle('mixed', sp?.kind === 'mix');
     const W = stage.clientWidth - GAP * 2, H = stage.clientHeight - GAP * 2;
-    const out = HubLayout.compute({ ids, mode: g?.layout, featuredId: g?.featured, split: g?.split ?? 0.68, focusId, width: W, height: H, gap: GAP });
+    const out = HubLayout.compute({ ids, mode: sp?.layout, featuredId: sp?.featured, split: liveSplit ?? sp?.split ?? 0.68, focusId, width: W, height: H, gap: GAP });
 
     for (const [id, v] of views) {
       const r = out.rects[id];
-      if (!r) { v.el.classList.add('parked'); continue; } // outro jogo ou fora do foco: continua rodando, so nao aparece
+      if (!r) { v.el.classList.add('parked'); continue; } // outro espaco ou fora do foco: continua rodando, so nao aparece
       v.el.classList.remove('parked');
-      v.el.classList.toggle('is-main', out.main === id && g.layout === 'destaque' && !focusId && ids.length > 1);
+      v.el.classList.toggle('is-main', out.main === id && sp.layout === 'destaque' && !focusId && ids.length > 1);
       v.el.classList.toggle('is-focus', focusId === id);
       Object.assign(v.el.style, { left: GAP + r.x + 'px', top: GAP + r.y + 'px', width: r.w + 'px', height: r.h + 'px' });
-      const f = HubLayout.fit(r.w - BODY_INSET_X, r.h - HEAD - BODY_INSET_Y, g.aspect);
+      const f = HubLayout.fit(r.w - BODY_INSET_X, r.h - HEAD - BODY_INSET_Y, sp.aspect);
       Object.assign(v.frame.style, { left: f.x + 'px', top: f.y + 'px', width: f.w + 'px', height: f.h + 'px' });
       v.idx.textContent = String(ids.indexOf(id) + 1);
-      v.btnStar.hidden = ids.length < 2 || (g.layout === 'destaque' && out.main === id);
+      v.btnStar.hidden = ids.length < 2 || (sp.layout === 'destaque' && out.main === id);
       v.btnFocus.replaceChildren(HubIcon(focusId === id ? 'shrink' : 'expand'));
     }
     if (out.splitter) {
@@ -227,16 +247,17 @@
 
   // Divisoria do modo Destaque
   splitter.addEventListener('pointerdown', (e) => {
-    const g = game(); if (!g) return;
+    const sp = space(); if (!sp) return;
     splitter.setPointerCapture(e.pointerId);
     document.body.classList.add('resizing');
     const rect = $('stage').getBoundingClientRect();
-    const move = (ev) => { g.split = Math.min(0.85, Math.max(0.4, (ev.clientX - rect.left - GAP) / (rect.width - GAP * 3))); layoutStage(); };
+    const move = (ev) => { liveSplit = Math.min(0.85, Math.max(0.4, (ev.clientX - rect.left - GAP) / (rect.width - GAP * 3))); layoutStage(); };
     const up = () => {
       splitter.removeEventListener('pointermove', move);
       document.body.classList.remove('resizing');
-      const split = g.split;
-      commit((d) => { d.games.find((x) => x.id === g.id).split = split; });
+      const split = liveSplit;
+      liveSplit = null;
+      if (split != null) commit((d) => { const r = spaceRef(d, sp); if (r) r.split = split; });
     };
     splitter.addEventListener('pointermove', move);
     splitter.addEventListener('pointerup', up, { once: true });
@@ -260,11 +281,15 @@
       e.preventDefault();
       const from = dragId, to = view.id;
       if (!from || from === to) return;
+      const sp = space(); if (!sp) return;
       commit((d) => {
-        const g = d.games.find((x) => x.id === d.prefs.activeGame);
-        if (g.layout === 'destaque' && (g.featured || accountsOf(g.id)[0]?.id) === to) { g.featured = from; return; }
-        const i = d.accounts.findIndex((a) => a.id === from), j = d.accounts.findIndex((a) => a.id === to);
-        [d.accounts[i], d.accounts[j]] = [d.accounts[j], d.accounts[i]];
+        const r = spaceRef(d, sp); if (!r) return;
+        if (r.layout === 'destaque' && (r.featured || sp.ids[0]) === to) { r.featured = from; return; }
+        // num espaco misto a ordem e a da lista do espaco; num jogo, a ordem das contas
+        const list = sp.kind === 'mix' ? r.accounts : d.accounts;
+        const i = list.findIndex((x) => (x.id ?? x) === from), j = list.findIndex((x) => (x.id ?? x) === to);
+        if (i < 0 || j < 0) return;
+        [list[i], list[j]] = [list[j], list[i]];
       });
     });
   }
@@ -288,7 +313,7 @@
     list.replaceChildren();
     for (const g of S.games) {
       const b = el('button', 'nav-item state'); b.type = 'button'; b.title = g.name;
-      const active = screen === 'games' && g.id === S.prefs.activeGame;
+      const active = screen === 'games' && !mix() && g.id === S.prefs.activeGame;
       b.classList.toggle('active', active);
       if (active) b.setAttribute('aria-current', 'page');
       const indicator = el('span', 'nav-indicator');
@@ -297,13 +322,50 @@
       b.append(indicator, el('span', 'label', g.name), el('span', 'count', n ? String(n) : ''));
       b.addEventListener('click', () => {
         if (screen !== 'games') setScreen('games');
-        if (g.id !== S.prefs.activeGame) { focusId = null; commit((d) => { d.prefs.activeGame = g.id; }); }
+        if (g.id !== S.prefs.activeGame || mix()) { focusId = null; commit((d) => { d.prefs.activeGame = g.id; d.prefs.activeMix = null; }); }
       });
       list.appendChild(b);
     }
   }
 
+  // Icone de um espaco misto: mosaico 2x2 com os icones dos jogos das primeiras telas.
+  function mixTile(m) {
+    const tile = el('span', 'tile mix-tile');
+    const games = [];
+    for (const id of m.accounts) { const g = gameOfAccount(id); if (g && !games.includes(g)) games.push(g); }
+    for (let i = 0; i < 4; i++) {
+      const g = games[i % Math.max(1, games.length)];
+      const q = el('span', 'mix-q');
+      if (g?.icon) { const img = el('img'); img.src = g.icon; img.alt = ''; img.draggable = false; q.appendChild(img); }
+      else if (g) q.textContent = g.name[0].toUpperCase();
+      tile.appendChild(q);
+    }
+    return tile;
+  }
+
+  function renderMixes() {
+    const list = $('mixList');
+    list.replaceChildren();
+    for (const m of S.mixes) {
+      const b = el('button', 'nav-item state'); b.type = 'button'; b.title = m.name;
+      const active = screen === 'games' && S.prefs.activeMix === m.id;
+      b.classList.toggle('active', active);
+      if (active) b.setAttribute('aria-current', 'page');
+      const indicator = el('span', 'nav-indicator');
+      indicator.appendChild(mixTile(m));
+      b.append(indicator, el('span', 'label', m.name), el('span', 'count', m.accounts.length ? String(m.accounts.length) : ''));
+      b.addEventListener('click', () => {
+        if (screen !== 'games') setScreen('games');
+        if (S.prefs.activeMix !== m.id) { focusId = null; commit((d) => { d.prefs.activeMix = m.id; }); }
+      });
+      list.appendChild(b);
+    }
+    $('newMix').disabled = S.mixes.length >= 20;
+  }
+
   function renderAccounts() {
+    const m = mix();
+    if (m) return renderMixAccounts(m);
     const g = game();
     $('accountsSection').hidden = !g;
     if (!g) return;
@@ -326,7 +388,34 @@
       li.appendChild(acts);
       list.appendChild(li);
     }
+    $('addAccountLabel').textContent = t('newAccount');
     $('addAccount').disabled = accountsOf(g.id).length >= 9;
+  }
+
+  // Contas de um espaco misto: apelido + jogo; a acao e tirar do espaco (a conta continua existindo no jogo).
+  function renderMixAccounts(m) {
+    $('accountsSection').hidden = false;
+    $('accountsLabel').textContent = t('accountsOf', { game: m.name });
+    const list = $('accountList');
+    list.replaceChildren();
+    for (const id of m.accounts) {
+      const a = S.accounts.find((x) => x.id === id); if (!a) continue;
+      const li = el('li', 'account-item'); li.dataset.id = a.id;
+      li.classList.toggle('focused', focusId === a.id);
+      const dot = el('span', 'status'); dot.dataset.status = views.get(a.id)?.status || 'loading';
+      const name = el('button', 'account-name'); name.type = 'button'; name.title = t('expandAccount');
+      name.append(el('span', null, a.name), el('small', 'account-game', gameOfAccount(a.id)?.name || ''));
+      name.addEventListener('click', () => toggleFocus(a.id));
+      const acts = el('span', 'account-actions');
+      acts.append(
+        panelButton('edit', t('rename'), () => renameAccount(a)),
+        panelButton('minus', t('removeFromMix'), () => commit((d) => { const r = d.mixes.find((x) => x.id === m.id); if (r) r.accounts = r.accounts.filter((x) => x !== a.id); }))
+      );
+      li.append(dot, name, acts);
+      list.appendChild(li);
+    }
+    $('addAccountLabel').textContent = t('mixPick');
+    $('addAccount').disabled = false;
   }
 
   function renderThemes() {
@@ -396,19 +485,25 @@
 
   // ---------- barra ----------
   function renderBar() {
+    const sp = space();
     const g = game();
     const onMonitor = screen === 'monitor';
-    $('gameTitle').textContent = onMonitor ? t('monitor') : g ? g.name : t('noGame');
-    $('gameHost').textContent = onMonitor ? t('monitorSubtitle') : g ? new URL(g.url).host : '';
-    $('gameControls').hidden = !g || onMonitor;
-    if (g) {
+    // num espaco misto, o subtitulo lista os jogos das telas
+    const mixGames = sp?.kind === 'mix' ? [...new Set(sp.ids.map((id) => gameOfAccount(id)?.name).filter(Boolean))].join(' · ') : '';
+    $('gameTitle').textContent = onMonitor ? t('monitor') : sp ? sp.name : t('noGame');
+    $('gameHost').textContent = onMonitor ? t('monitorSubtitle') : sp?.kind === 'mix' ? (mixGames || t('mixEmpty')) : g ? new URL(g.url).host : '';
+    $('gameControls').hidden = !sp || onMonitor;
+    if (sp) {
       document.querySelectorAll('[data-layout]').forEach((b) => {
-        const on = b.dataset.layout === g.layout;
+        const on = b.dataset.layout === sp.layout;
         b.setAttribute('aria-checked', String(on));
         b.querySelector('.seg-check').replaceChildren(...(on ? [HubIcon('check')] : []));
       });
-      $('zoomVal').textContent = Math.round(g.zoom * 100) + '%';
-      $('aspect').value = g.aspect;
+      $('aspect').value = sp.aspect;
+      // zoom e por jogo: num espaco misto cada tela usa o zoom do proprio jogo
+      document.querySelector('#gameControls .zoom').hidden = sp.kind === 'mix';
+      if (g) $('zoomVal').textContent = Math.round(g.zoom * 100) + '%';
+      $('gameMenu').title = sp.kind === 'mix' ? t('editMix') : t('editGame');
     }
     $('muteAll').replaceChildren(HubIcon(S.prefs.muted ? 'mute' : 'sound'));
     $('muteAll').setAttribute('aria-pressed', String(S.prefs.muted));
@@ -423,9 +518,19 @@
   }
 
   function renderEmpty() {
-    const g = game();
     const box = $('empty');
     box.replaceChildren();
+    const m = mix();
+    if (m) {
+      box.hidden = m.accounts.length > 0;
+      if (!box.hidden) {
+        const b = el('button', 'btn filled state', t('mixPick')); b.type = 'button';
+        b.addEventListener('click', () => editMix());
+        box.append(emptyMark(), el('h1', null, t('mixEmpty')), el('p', null, t('mixEmptyText')), b);
+      }
+      return;
+    }
+    const g = game();
     const n = g ? accountsOf(g.id).length : 0;
     box.hidden = !!(g && n);
     if (!box.hidden) {
@@ -450,7 +555,7 @@
     $('navMonitor').classList.toggle('active', screen === 'monitor');
     $('navMonitor').toggleAttribute('aria-current', screen === 'monitor');
     syncViews();
-    renderGames(); renderAccounts(); renderThemes(); renderBar(); renderEmpty();
+    renderGames(); renderMixes(); renderAccounts(); renderThemes(); renderBar(); renderEmpty();
     layoutStage();
   }
 
@@ -500,7 +605,7 @@
   function addGame() {
     HubGames.open({
       catalog, games: S.games,
-      onOpen: (gameId) => { if (screen !== 'games') setScreen('games'); focusId = null; commit((d) => { d.prefs.activeGame = gameId; }); },
+      onOpen: (gameId) => { if (screen !== 'games') setScreen('games'); focusId = null; commit((d) => { d.prefs.activeGame = gameId; d.prefs.activeMix = null; }); },
       onAdd: async ({ name, url }) => {
         const gid = uid('g'), aid = uid('a');
         if (screen !== 'games') setScreen('games');
@@ -509,6 +614,7 @@
           d.games.push({ id: gid, name, url, zoom: 1, aspect: 'livre', layout: 'grade', featured: null, split: 0.68, icon: null });
           d.accounts.push({ id: aid, gameId: gid, name: t('defaultAccountName', { n: 1 }), muted: false });
           d.prefs.activeGame = gid;
+          d.prefs.activeMix = null;
         });
         toast(t('hubAddedToast', { name }));
       }
@@ -577,27 +683,62 @@
     hub.clearAccount(a.id);
   }
 
+  // ---------- espacos mistos ----------
+  function newMix() {
+    if (!S.accounts.length) return toast(t('mixNoGames'));
+    HubMixEditor.open({
+      state: S, mix: null,
+      onDelete: () => {},
+      onSave: async ({ name, accounts }) => {
+        const id = uid('m');
+        if (screen !== 'games') setScreen('games');
+        focusId = null;
+        await commit((d) => {
+          d.mixes.push({ id, name, accounts, aspect: 'livre', layout: 'grade', featured: null, split: 0.68 });
+          d.prefs.activeMix = id;
+        });
+        toast(t('mixCreated', { name }));
+      }
+    });
+  }
+
+  function editMix() {
+    const m = mix(); if (!m) return;
+    HubMixEditor.open({
+      state: S, mix: m,
+      onSave: ({ name, accounts }) => commit((d) => { const r = d.mixes.find((x) => x.id === m.id); if (r) { r.name = name; r.accounts = accounts; } }),
+      onDelete: async () => {
+        const sure = await ask({ title: t('mixDeleteTitle', { name: m.name }), ok: t('mixDelete'), danger: true,
+          extra: () => el('p', 'dialog-text', t('mixDeleteText')) });
+        if (!sure) return;
+        focusId = null;
+        commit((d) => { d.mixes = d.mixes.filter((x) => x.id !== m.id); d.prefs.activeMix = null; });
+      }
+    });
+  }
+
   // ---------- acoes da barra ----------
-  const setZoom = (fn) => { const g = game(); if (g) commit((d) => { const x = d.games.find((y) => y.id === g.id); x.zoom = Math.round(Math.min(2, Math.max(0.5, fn(x.zoom))) * 10) / 10; }); };
-  const setLayout = (mode) => { const g = game(); if (g) { focusId = null; commit((d) => { d.games.find((y) => y.id === g.id).layout = mode; }); } };
+  const setZoom = (fn) => { const g = game(); if (g && !mix()) commit((d) => { const x = d.games.find((y) => y.id === g.id); x.zoom = Math.round(Math.min(2, Math.max(0.5, fn(x.zoom))) * 10) / 10; }); };
+  const setLayout = (mode) => { const sp = space(); if (sp) { focusId = null; commit((d) => { const r = spaceRef(d, sp); if (r) r.layout = mode; }); } };
   const toggleMute = () => commit((d) => { d.prefs.muted = !d.prefs.muted; });
   const toggleDrawer = () => commit((d) => { d.prefs.drawer = !d.prefs.drawer; });
 
   $('addGame').addEventListener('click', addGame);
-  $('addAccount').addEventListener('click', addAccount);
-  $('gameMenu').addEventListener('click', editGame);
+  $('addAccount').addEventListener('click', () => (mix() ? editMix() : addAccount()));
+  $('gameMenu').addEventListener('click', () => (mix() ? editMix() : editGame()));
+  $('newMix').addEventListener('click', newMix);
   $('toggleDrawer').addEventListener('click', toggleDrawer);
   $('muteAll').addEventListener('click', toggleMute);
   $('fullscreen').addEventListener('click', () => hub.toggleFullscreen());
   $('zoomIn').addEventListener('click', () => setZoom((z) => z + 0.1));
   $('zoomOut').addEventListener('click', () => setZoom((z) => z - 0.1));
   $('zoomVal').addEventListener('click', () => setZoom(() => 1));
-  $('aspect').addEventListener('change', (e) => { const g = game(); if (g) commit((d) => { d.games.find((y) => y.id === g.id).aspect = e.target.value; }); });
+  $('aspect').addEventListener('change', (e) => { const sp = space(); if (sp) commit((d) => { const r = spaceRef(d, sp); if (r) r.aspect = e.target.value; }); });
   document.querySelectorAll('[data-layout]').forEach((b) => b.addEventListener('click', () => setLayout(b.dataset.layout)));
 
   hub.onFullscreen((on) => { isFullscreen = on; renderBar(); });
   hub.onHotkey((key) => {
-    if ($('dialog').open || $('hubDialog').open) return;
+    if (anyDialogOpen()) return;
     if (key === 'escape') { if (focusId) { focusId = null; layoutStage(); renderAccounts(); } return; }
     if (key === 'fullscreen') return hub.toggleFullscreen();
     if (key === 'drawer') return toggleDrawer();
@@ -605,12 +746,13 @@
     if (key === 'zoom-in') return setZoom((z) => z + 0.1);
     if (key === 'zoom-out') return setZoom((z) => z - 0.1);
     if (key === 'zoom-reset') return setZoom(() => 1);
-    if (key === 'layout') { const g = game(); return g && setLayout(g.layout === 'grade' ? 'destaque' : 'grade'); }
+    if (key === 'layout') { const sp = space(); return sp && setLayout(sp.layout === 'grade' ? 'destaque' : 'grade'); }
     const m = /^focus-(\d)$/.exec(key);
-    if (m) { const g = game(); const a = g && accountsOf(g.id)[Number(m[1]) - 1]; if (a) { toggleFocus(a.id); renderAccounts(); } }
+    if (m) { const id = space()?.ids[Number(m[1]) - 1]; if (id) { toggleFocus(id); renderAccounts(); } }
   });
   // Esc com o foco na propria interface (fora de um jogo)
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && focusId && !$('dialog').open && !$('hubDialog').open) { focusId = null; layoutStage(); renderAccounts(); } });
+  const anyDialogOpen = () => $('dialog').open || $('hubDialog').open || $('mixDialog').open;
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && focusId && !anyDialogOpen()) { focusId = null; layoutStage(); renderAccounts(); } });
 
   let toastT = 0;
   function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2600); }
@@ -675,6 +817,9 @@
   $('hubClose').addEventListener('click', () => $('hubDialog').close());
   $('hubDialog').addEventListener('click', (e) => { if (e.target === $('hubDialog')) $('hubDialog').close(); }); // clique fora fecha
   document.querySelector('#addAccount .btn-icon').replaceWith(HubIcon('plus'));
+  document.querySelector('#newMix .btn-icon').replaceWith(HubIcon('panels'));
+  $('mixClose').replaceChildren(HubIcon('close'));
+  $('mixDialog').addEventListener('click', (e) => { if (e.target === $('mixDialog')) $('mixDialog').close(); });
 
   render();
 })();

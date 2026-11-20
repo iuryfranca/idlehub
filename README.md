@@ -21,7 +21,7 @@ O IdleHub **não coleta, não envia e não retém** nenhuma informação pessoal
   mesmo site, pela sessão da própria conta, só por HTTPS e com limite de 256 KB. O ícone vira um PNG de 64×64 guardado
   no `idlehub.json`, e nada é enviado a mais ninguém. Links externos só abrem no seu navegador quando você clica.
 - **Tudo fica no seu computador**, na pasta `%APPDATA%\idlehub`:
-  - `idlehub.json`: jogos (com o ícone de cada um), apelidos das contas e preferências;
+  - `idlehub.json`: jogos (com o ícone de cada um), apelidos das contas, espaços mistos e preferências;
   - `Partitions\acc-*`: a sessão de cada conta (cookies e dados que o próprio jogo grava).
 - **Você controla esses dados.** "Remover conta" apaga a sessão daquela conta. Para apagar tudo, feche o app e apague a pasta `%APPDATA%\idlehub`.
 - **Os jogos são outra coisa.** Cada jogo é um site de terceiros, com a própria política de privacidade. O que você
@@ -70,7 +70,8 @@ npm start              # ou dois cliques em "Abrir IdleHub.bat"
 | Temas | Grafite, Aurora, Oceano, Areia, Papel: cada um é uma cor base, e o algoritmo oficial do M3 gera a paleta completa |
 | Aparência | Seguir o sistema, Claro ou Escuro. Vale também para os jogos que têm modo claro/escuro |
 | Idioma | Seletor na lateral: Português (Brasil), English, Español. Na primeira abertura, segue o idioma do Windows. Os jogos recebem o mesmo idioma (cabeçalho `Accept-Language`) e o usam ao recarregar, se tiverem tradução |
-| Jogos continuam rodando | Trocar de jogo só esconde os painéis; nada é recarregado |
+| **Espaço misto** | Lateral → **Novo espaço misto**: dê um nome e clique nas contas de jogos diferentes (até 9; a ordem dos cliques é a ordem das telas, com prévia ao vivo). O espaço vira um item próprio na lateral, com Grade/Destaque, proporção e foco como num jogo. Cada tela mostra o nome do jogo; o zoom continua sendo o de cada jogo. A engrenagem da barra edita ou exclui o espaço (as contas não são apagadas) |
+| Jogos continuam rodando | Trocar de jogo ou de espaço só esconde os painéis; nada é recarregado |
 | **Monitor** | Tela dedicada (lateral → Monitor) com o uso da máquina e de cada conta em tempo real; ver abaixo |
 | **Hibernar conta** | 🌙 no painel ou no Monitor: fecha o processo da conta e libera CPU e memória, sem perder o login. ☀ acorda |
 
@@ -149,7 +150,8 @@ src/main/favicon.js     download do ícone do jogo (só HTTPS, pela sessão da c
 src/preload.js          ponte mínima (window.hub)
 src/renderer/           interface: index.html, styles.css, app.js, layout.js (cálculo puro), icons.js, i18n.js (traduções),
                         monitor-ui.js (tela Monitor e gráficos), winproc-ui.js (processos do Windows),
-                        game-hub.js + game-hub.css (hub de jogos), skeleton.js (padrão de carregamento)
+                        game-hub.js + game-hub.css (hub de jogos), mix-editor.js + mix.css (espaços mistos),
+                        skeleton.js (padrão de carregamento)
 src/renderer/m3/        tokens do Material 3 (tokens.css), cores geradas (colors.css) e a fonte Roboto Flex
 scripts/build-theme.mjs gera colors.css a partir das cores base (npm run theme)
 scripts/capture-screens.js  refaz as capturas do site e do vídeo (npm run screens)
