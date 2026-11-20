@@ -7,7 +7,11 @@
   const t = HubI18n.t;
   const THEMES = ['grafite', 'aurora', 'oceano', 'areia', 'papel'];
   const themeName = (id) => t('theme' + id[0].toUpperCase() + id.slice(1));
-  const HEAD = 30;   // altura da faixa de titulo de cada painel
+  const HEAD = 40;          // altura da faixa de titulo de cada painel
+  const BODY_INSET_X = 10;  // margens laterais do corpo (4+4) + bordas (1+1)
+  const BODY_INSET_Y = 6;   // margem inferior do corpo (4) + bordas (1+1)
+  const MODES = [{ id: 'sistema', icon: 'auto', key: 'modeSystem' }, { id: 'claro', icon: 'sun', key: 'modeLight' }, { id: 'escuro', icon: 'moon', key: 'modeDark' }];
+  const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
   const GAP = 8;
 
   const boot = await hub.load();
@@ -39,7 +43,7 @@
     view.status = status;
     view.el.dataset.status = status;
     view.dot.dataset.status = status;
-    const dot = document.querySelector('.account-item[data-id="' + view.id + '"] .dot');
+    const dot = document.querySelector('.account-item[data-id="' + view.id + '"] .status');
     if (dot) dot.dataset.status = status;
   }
 
@@ -56,7 +60,7 @@
   }
 
   function panelButton(icon, title, onClick) {
-    const b = el('button', 'pbtn'); b.type = 'button'; b.title = title;
+    const b = el('button', 'pbtn state'); b.type = 'button'; b.title = title;
     b.appendChild(HubIcon(icon));
     b.addEventListener('click', (e) => { e.stopPropagation(); onClick(); });
     return b;
@@ -67,7 +71,7 @@
     const panel = el('section', 'panel'); panel.dataset.id = acc.id;
     const head = el('div', 'panel-head'); head.draggable = true;
     const idx = el('span', 'pidx');
-    const dot = el('span', 'dot');
+    const dot = el('span', 'status');
     const name = el('span', 'pname');
     const actions = el('div', 'pactions');
     view.btnStar = panelButton('star', t('pinFeatured'), () => commit((d) => { const gg = d.games.find((x) => x.id === acc.gameId); gg.featured = acc.id; gg.layout = 'destaque'; }));
@@ -122,7 +126,7 @@
       v.name.textContent = acc.name;
       const muted = S.prefs.muted || acc.muted;
       v.btnMute.replaceChildren(HubIcon(muted ? 'mute' : 'sound'));
-      v.btnMute.classList.toggle('on', acc.muted);
+      v.btnMute.setAttribute('aria-pressed', String(acc.muted));
       v.btnMute.title = acc.muted ? t('accountMuted') : t('muteAccount');
       v.btnStar.title = t('pinFeatured'); v.btnReload.title = t('reload'); v.btnFocus.title = t('expand');
       applyAudio(v); applyZoom(v);
@@ -149,7 +153,7 @@
       v.el.classList.toggle('is-main', out.main === id && g.layout === 'destaque' && !focusId && ids.length > 1);
       v.el.classList.toggle('is-focus', focusId === id);
       Object.assign(v.el.style, { left: GAP + r.x + 'px', top: GAP + r.y + 'px', width: r.w + 'px', height: r.h + 'px' });
-      const f = HubLayout.fit(r.w, r.h - HEAD, g.aspect);
+      const f = HubLayout.fit(r.w - BODY_INSET_X, r.h - HEAD - BODY_INSET_Y, g.aspect);
       Object.assign(v.frame.style, { left: f.x + 'px', top: f.y + 'px', width: f.w + 'px', height: f.h + 'px' });
       v.idx.textContent = String(ids.indexOf(id) + 1);
       v.btnStar.hidden = ids.length < 2 || (g.layout === 'destaque' && out.main === id);
@@ -213,18 +217,19 @@
     const words = name.replace(/[^\p{L}\p{N} ]/gu, ' ').split(/\s+/).filter(Boolean);
     return ((words[0]?.[0] || '?') + (words[1]?.[0] || words[0]?.[1] || '')).toUpperCase();
   }
-  function hue(str) { let h = 0; for (const c of str) h = (h * 31 + c.codePointAt(0)) % 360; return h; }
 
   function renderGames() {
     const list = $('gameList');
     list.replaceChildren();
     for (const g of S.games) {
-      const b = el('button', 'game-item'); b.type = 'button'; b.title = g.name;
-      b.classList.toggle('active', g.id === S.prefs.activeGame);
-      const tile = el('span', 'tile', monogram(g.name));
-      tile.style.setProperty('--h', hue(g.name));
+      const b = el('button', 'nav-item state'); b.type = 'button'; b.title = g.name;
+      const active = g.id === S.prefs.activeGame;
+      b.classList.toggle('active', active);
+      if (active) b.setAttribute('aria-current', 'page');
+      const indicator = el('span', 'nav-indicator');
+      indicator.appendChild(el('span', 'tile', monogram(g.name)));
       const n = accountsOf(g.id).length;
-      b.append(tile, el('span', 'label', g.name), el('span', 'count', n ? String(n) : ''));
+      b.append(indicator, el('span', 'label', g.name), el('span', 'count', n ? String(n) : ''));
       b.addEventListener('click', () => { if (g.id !== S.prefs.activeGame) { focusId = null; commit((d) => { d.prefs.activeGame = g.id; }); } });
       list.appendChild(b);
     }
@@ -240,7 +245,7 @@
     for (const a of accountsOf(g.id)) {
       const li = el('li', 'account-item'); li.dataset.id = a.id;
       li.classList.toggle('focused', focusId === a.id);
-      const dot = el('span', 'dot'); dot.dataset.status = views.get(a.id)?.status || 'loading';
+      const dot = el('span', 'status'); dot.dataset.status = views.get(a.id)?.status || 'loading';
       const name = el('button', 'account-name', a.name); name.type = 'button'; name.title = t('expandAccount');
       name.addEventListener('click', () => toggleFocus(a.id));
       const acts = el('span', 'account-actions');
@@ -273,6 +278,27 @@
     });
   }
 
+  // ---------- aparencia (claro / escuro / seguir o sistema) ----------
+  const resolvedMode = () => (S.prefs.mode === 'claro' ? 'light' : S.prefs.mode === 'escuro' ? 'dark' : darkQuery.matches ? 'dark' : 'light');
+  darkQuery.addEventListener('change', () => { if (S.prefs.mode === 'sistema') document.documentElement.dataset.mode = resolvedMode(); });
+
+  function renderModes() {
+    const box = $('modes');
+    if (!box.childElementCount) {
+      for (const m of MODES) {
+        const b = el('button', 'state'); b.type = 'button'; b.dataset.mode = m.id; b.setAttribute('role', 'radio');
+        b.appendChild(HubIcon(m.icon));
+        b.addEventListener('click', () => commit((d) => { d.prefs.mode = m.id; }));
+        box.appendChild(b);
+      }
+    }
+    for (const b of box.children) {
+      const m = MODES.find((x) => x.id === b.dataset.mode);
+      b.title = t(m.key); b.setAttribute('aria-label', b.title);
+      b.setAttribute('aria-checked', String(m.id === S.prefs.mode));
+    }
+  }
+
   // ---------- idioma ----------
   // Uma lingua por vez: todo texto fixo da interface vem do dicionario do idioma escolhido.
   function renderLanguage() {
@@ -300,13 +326,24 @@
     $('gameHost').textContent = g ? new URL(g.url).host : '';
     $('gameControls').hidden = !g;
     if (g) {
-      document.querySelectorAll('[data-layout]').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.layout === g.layout)));
+      document.querySelectorAll('[data-layout]').forEach((b) => {
+        const on = b.dataset.layout === g.layout;
+        b.setAttribute('aria-checked', String(on));
+        b.querySelector('.seg-check').replaceChildren(...(on ? [HubIcon('check')] : []));
+      });
       $('zoomVal').textContent = Math.round(g.zoom * 100) + '%';
       $('aspect').value = g.aspect;
     }
     $('muteAll').replaceChildren(HubIcon(S.prefs.muted ? 'mute' : 'sound'));
-    $('muteAll').classList.toggle('on', S.prefs.muted);
+    $('muteAll').setAttribute('aria-pressed', String(S.prefs.muted));
     $('fullscreen').replaceChildren(HubIcon(isFullscreen ? 'unfull' : 'full'));
+  }
+
+  function emptyMark() {
+    const mark = el('div', 'empty-mark');
+    mark.setAttribute('aria-hidden', 'true');
+    for (let i = 0; i < 4; i++) mark.appendChild(el('span'));
+    return mark;
   }
 
   function renderEmpty() {
@@ -316,10 +353,10 @@
     const n = g ? accountsOf(g.id).length : 0;
     box.hidden = !!(g && n);
     if (!box.hidden) {
-      const b = el('button', 'btn primary', g ? t('emptyCreateFirst') : t('emptyAddGame')); b.type = 'button';
+      const b = el('button', 'btn filled state', g ? t('emptyCreateFirst') : t('emptyAddGame')); b.type = 'button';
       b.addEventListener('click', () => (g ? addAccount() : addGame()));
       box.append(
-        el('div', 'empty-mark'),
+        emptyMark(),
         el('h1', null, g ? t('emptyNoAccounts', { game: g.name }) : t('emptyHero')),
         el('p', null, g ? t('emptyNoAccountsText') : t('emptyHeroText')),
         b
@@ -328,11 +365,11 @@
   }
 
   function render() {
-    document.body.dataset.theme = S.prefs.theme;
+    document.documentElement.dataset.theme = S.prefs.theme;
+    document.documentElement.dataset.mode = resolvedMode();
     $('shell').classList.toggle('drawer-closed', !S.prefs.drawer);
-    $('toggleDrawer').replaceChildren(HubIcon('sidebar'));
-    $('gameMenu').replaceChildren(HubIcon('gear'));
     renderLanguage();
+    renderModes();
     syncViews();
     renderGames(); renderAccounts(); renderThemes(); renderBar(); renderEmpty();
     layoutStage();
@@ -393,7 +430,7 @@
         const chips = el('div', 'chips');
         const have = new Set(S.games.map((g) => new URL(g.url).origin));
         for (const c of catalog) {
-          const chip = el('button', 'chip', c.name); chip.type = 'button';
+          const chip = el('button', 'chip state', c.name); chip.type = 'button';
           if (have.has(new URL(c.url).origin)) { chip.disabled = true; chip.title = t('alreadyAdded'); }
           chip.addEventListener('click', () => { inputs.name.value = c.name; inputs.url.value = c.url; inputs.url.focus(); });
           chips.appendChild(chip);
@@ -424,7 +461,7 @@
       ],
       extra: () => {
         const box = el('div', 'danger-zone');
-        const b = el('button', 'btn ghost danger-text', t('removeGameButton')); b.type = 'button';
+        const b = el('button', 'btn outlined state', t('removeGameButton')); b.type = 'button';
         b.addEventListener('click', () => { removeIt = true; $('dialogForm').requestSubmit(); });
         box.appendChild(b);
         return box;
@@ -508,6 +545,12 @@
 
   let toastT = 0;
   function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2600); }
+
+  // icones fixos
+  const icons = { toggleDrawer: 'menu', gameMenu: 'gear', zoomOut: 'minus', zoomIn: 'plus' };
+  for (const [id, name] of Object.entries(icons)) $(id).replaceChildren(HubIcon(name));
+  document.querySelector('#addGame .fab-icon').replaceWith(HubIcon('plus'));
+  document.querySelector('#addAccount .btn-icon').replaceWith(HubIcon('plus'));
 
   render();
 })();

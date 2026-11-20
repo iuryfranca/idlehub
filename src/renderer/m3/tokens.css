@@ -1,0 +1,88 @@
+/* Tokens Material 3 (estaticos). As cores ficam em colors.css, geradas por scripts/build-theme.mjs.
+   Valores conforme a especificacao do M3: escala tipografica, cantos, elevacao, movimento e state layers. */
+
+@font-face {
+  font-family: 'Roboto Flex';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 1000;
+  src: url(fonts/roboto-flex-latin-wght-normal.woff2) format('woff2-variations');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Roboto Flex';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 1000;
+  src: url(fonts/roboto-flex-latin-ext-wght-normal.woff2) format('woff2-variations');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+:root {
+  /* ---- tipografia ---- */
+  --md-ref-typeface-brand: 'Roboto Flex', system-ui, sans-serif;
+  --md-ref-typeface-plain: 'Roboto Flex', system-ui, sans-serif;
+  --md-ref-typeface-mono: 'Cascadia Mono', 'Consolas', ui-monospace, monospace;
+
+  --md-sys-typescale-headline-small: 400 24px/32px var(--md-ref-typeface-brand);
+  --md-sys-typescale-title-large: 400 22px/28px var(--md-ref-typeface-brand);
+  --md-sys-typescale-title-medium: 500 16px/24px var(--md-ref-typeface-plain);
+  --md-sys-typescale-title-small: 500 14px/20px var(--md-ref-typeface-plain);
+  --md-sys-typescale-body-large: 400 16px/24px var(--md-ref-typeface-plain);
+  --md-sys-typescale-body-medium: 400 14px/20px var(--md-ref-typeface-plain);
+  --md-sys-typescale-body-small: 400 12px/16px var(--md-ref-typeface-plain);
+  --md-sys-typescale-label-large: 500 14px/20px var(--md-ref-typeface-plain);
+  --md-sys-typescale-label-medium: 500 12px/16px var(--md-ref-typeface-plain);
+  --md-sys-typescale-label-small: 500 11px/16px var(--md-ref-typeface-plain);
+  --md-sys-typescale-title-medium-tracking: 0.15px;
+  --md-sys-typescale-title-small-tracking: 0.1px;
+  --md-sys-typescale-body-large-tracking: 0.5px;
+  --md-sys-typescale-body-medium-tracking: 0.25px;
+  --md-sys-typescale-body-small-tracking: 0.4px;
+  --md-sys-typescale-label-large-tracking: 0.1px;
+  --md-sys-typescale-label-medium-tracking: 0.5px;
+
+  /* ---- cantos ---- */
+  --md-sys-shape-corner-none: 0;
+  --md-sys-shape-corner-extra-small: 4px;
+  --md-sys-shape-corner-small: 8px;
+  --md-sys-shape-corner-medium: 12px;
+  --md-sys-shape-corner-large: 16px;
+  --md-sys-shape-corner-extra-large: 28px;
+  --md-sys-shape-corner-full: 9999px;
+
+  /* ---- elevacao (sombras so onde o M3 pede protecao extra: FAB, dialogo, menu) ---- */
+  --shadow-key: color-mix(in srgb, var(--md-sys-color-shadow) 30%, transparent);
+  --shadow-ambient: color-mix(in srgb, var(--md-sys-color-shadow) 15%, transparent);
+  --md-sys-elevation-level1: 0 1px 2px 0 var(--shadow-key), 0 1px 3px 1px var(--shadow-ambient);
+  --md-sys-elevation-level2: 0 1px 2px 0 var(--shadow-key), 0 2px 6px 2px var(--shadow-ambient);
+  --md-sys-elevation-level3: 0 1px 3px 0 var(--shadow-key), 0 4px 8px 3px var(--shadow-ambient);
+
+  /* ---- state layers (opacidade da camada de interacao) ---- */
+  --md-sys-state-hover: 0.08;
+  --md-sys-state-focus: 0.10;
+  --md-sys-state-pressed: 0.10;
+  --md-sys-state-dragged: 0.16;
+  --md-sys-state-disabled-content: 0.38;
+  --md-sys-state-disabled-container: 0.12;
+
+  /* ---- movimento ---- */
+  --md-sys-motion-easing-emphasized: cubic-bezier(0.2, 0, 0, 1);
+  --md-sys-motion-easing-emphasized-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1);
+  --md-sys-motion-easing-emphasized-accelerate: cubic-bezier(0.3, 0, 0.8, 0.15);
+  --md-sys-motion-easing-standard: cubic-bezier(0.2, 0, 0, 1);
+  --md-sys-motion-duration-short: 200ms;
+  --md-sys-motion-duration-medium: 300ms;
+  --md-sys-motion-duration-long: 400ms;
+
+  /* ---- espacamento (grade de 8dp, com meio-passo de 4dp) ---- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --md-sys-motion-duration-short: 0ms; --md-sys-motion-duration-medium: 0ms; --md-sys-motion-duration-long: 0ms; }
+}

@@ -38,7 +38,8 @@
       errNicknameEmpty: 'O apelido não pode ficar vazio.',
       removeAccountText: 'A sessão desta conta (login, cookies e dados salvos pelo jogo) será apagada deste computador.',
       themeGrafite: 'Grafite', themeAurora: 'Aurora', themeOceano: 'Oceano', themeAreia: 'Areia', themePapel: 'Papel',
-      languageChanged: 'Idioma alterado. Os jogos usam o novo idioma ao recarregar.'
+      languageChanged: 'Idioma alterado. Os jogos usam o novo idioma ao recarregar.',
+      appearance: 'Aparência', modeSystem: 'Seguir o sistema', modeLight: 'Claro', modeDark: 'Escuro'
     },
     en: {
       games: 'Games', addGame: 'Add game', accounts: 'Accounts', accountsOf: 'Accounts · {game}', newAccount: 'New account',
@@ -66,7 +67,8 @@
       errNicknameEmpty: 'The nickname cannot be empty.',
       removeAccountText: 'This account\'s session (login, cookies and data saved by the game) will be deleted from this computer.',
       themeGrafite: 'Graphite', themeAurora: 'Aurora', themeOceano: 'Ocean', themeAreia: 'Sand', themePapel: 'Paper',
-      languageChanged: 'Language changed. Games use the new language when reloaded.'
+      languageChanged: 'Language changed. Games use the new language when reloaded.',
+      appearance: 'Appearance', modeSystem: 'Follow system', modeLight: 'Light', modeDark: 'Dark'
     },
     es: {
       games: 'Juegos', addGame: 'Añadir juego', accounts: 'Cuentas', accountsOf: 'Cuentas · {game}', newAccount: 'Nueva cuenta',
@@ -94,7 +96,8 @@
       errNicknameEmpty: 'El apodo no puede quedar vacío.',
       removeAccountText: 'La sesión de esta cuenta (inicio de sesión, cookies y datos guardados por el juego) se borrará de este equipo.',
       themeGrafite: 'Grafito', themeAurora: 'Aurora', themeOceano: 'Océano', themeAreia: 'Arena', themePapel: 'Papel',
-      languageChanged: 'Idioma cambiado. Los juegos usan el nuevo idioma al recargar.'
+      languageChanged: 'Idioma cambiado. Los juegos usan el nuevo idioma al recargar.',
+      appearance: 'Apariencia', modeSystem: 'Seguir el sistema', modeLight: 'Claro', modeDark: 'Oscuro'
     }
   };
 

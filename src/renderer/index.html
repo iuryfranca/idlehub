@@ -1,35 +1,43 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="grafite" data-mode="dark">
 <head>
   <meta charset="utf-8">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'">
   <title>IdleHub</title>
+  <link rel="stylesheet" href="m3/tokens.css">
+  <link rel="stylesheet" href="m3/colors.css">
   <link rel="stylesheet" href="styles.css">
 </head>
-<body data-theme="grafite">
+<body>
   <!-- Textos ficam vazios aqui: o app.js preenche pelo dicionario do idioma escolhido (data-i18n*). -->
   <div class="shell" id="shell">
     <aside class="drawer" id="drawer" data-i18n-aria="sidebarAria">
-      <div class="brand">
-        <span class="brand-mark" aria-hidden="true"></span>
+      <div class="drawer-head">
+        <button class="icon-btn state" id="toggleDrawer" type="button" data-i18n-title="toggleDrawer"></button>
         <span class="brand-name">IdleHub</span>
       </div>
 
+      <button class="fab state" id="addGame" type="button"><span class="fab-icon"></span><span class="label" data-i18n="addGame"></span></button>
+
       <div class="section-label" data-i18n="games"></div>
       <nav class="game-list" id="gameList"></nav>
-      <button class="add-row" id="addGame" type="button"><span class="plus" aria-hidden="true">+</span><span class="label" data-i18n="addGame"></span></button>
 
       <div class="accounts" id="accountsSection">
+        <hr class="divider">
         <div class="section-label" id="accountsLabel"></div>
         <ul class="account-list" id="accountList"></ul>
-        <button class="add-row" id="addAccount" type="button"><span class="plus" aria-hidden="true">+</span><span class="label" data-i18n="newAccount"></span></button>
+        <button class="tonal-btn state" id="addAccount" type="button"><span class="btn-icon"></span><span data-i18n="newAccount"></span></button>
       </div>
 
       <div class="drawer-foot">
-        <label class="lang">
-          <span class="lang-label" data-i18n="language"></span>
+        <label class="foot-group lang select-field">
+          <span class="foot-label" data-i18n="language"></span>
           <select id="language"></select>
         </label>
+        <div class="foot-group">
+          <span class="foot-label" data-i18n="appearance"></span>
+          <div class="seg seg-mode" id="modes" role="radiogroup" data-i18n-aria="appearance"></div>
+        </div>
         <div class="foot-row">
           <div class="themes" id="themes" role="radiogroup" data-i18n-aria="theme"></div>
           <span class="version" id="version"></span>
@@ -39,7 +47,6 @@
 
     <main class="main">
       <header class="bar" id="bar">
-        <button class="icon-btn" id="toggleDrawer" type="button" data-i18n-title="toggleDrawer"></button>
         <div class="title">
           <span class="title-name" id="gameTitle"></span>
           <span class="title-host" id="gameHost"></span>
@@ -47,15 +54,15 @@
         <div class="spacer"></div>
         <div class="controls" id="gameControls">
           <div class="seg" role="radiogroup" data-i18n-aria="layout">
-            <button type="button" data-layout="grade" data-i18n="grid" data-i18n-title="gridHint"></button>
-            <button type="button" data-layout="destaque" data-i18n="featured" data-i18n-title="featuredHint"></button>
+            <button type="button" class="state" data-layout="grade" data-i18n-title="gridHint"><span class="seg-check"></span><span data-i18n="grid"></span></button>
+            <button type="button" class="state" data-layout="destaque" data-i18n-title="featuredHint"><span class="seg-check"></span><span data-i18n="featured"></span></button>
           </div>
           <div class="zoom" data-i18n-aria="zoom">
-            <button type="button" class="icon-btn small" id="zoomOut" data-i18n-title="zoomOut">−</button>
-            <button type="button" class="zoom-val" id="zoomVal" data-i18n-title="zoomReset">100%</button>
-            <button type="button" class="icon-btn small" id="zoomIn" data-i18n-title="zoomIn">+</button>
+            <button type="button" class="icon-btn small state" id="zoomOut" data-i18n-title="zoomOut"></button>
+            <button type="button" class="zoom-val state" id="zoomVal" data-i18n-title="zoomReset">100%</button>
+            <button type="button" class="icon-btn small state" id="zoomIn" data-i18n-title="zoomIn"></button>
           </div>
-          <label class="select" data-i18n-title="aspect">
+          <label class="select-field" data-i18n-title="aspect">
             <select id="aspect">
               <option value="livre" data-i18n="aspectFree"></option>
               <option value="16:9">16:9</option>
@@ -64,10 +71,10 @@
               <option value="9:16">9:16</option>
             </select>
           </label>
-          <button class="icon-btn" id="gameMenu" type="button" data-i18n-title="editGame"></button>
+          <button class="icon-btn state" id="gameMenu" type="button" data-i18n-title="editGame"></button>
         </div>
-        <button class="icon-btn" id="muteAll" type="button" data-i18n-title="muteAll"></button>
-        <button class="icon-btn" id="fullscreen" type="button" data-i18n-title="fullscreen"></button>
+        <button class="icon-btn state" id="muteAll" type="button" data-i18n-title="muteAll"></button>
+        <button class="icon-btn state" id="fullscreen" type="button" data-i18n-title="fullscreen"></button>
       </header>
 
       <div class="stage" id="stage">
@@ -81,8 +88,8 @@
       <h2 id="dialogTitle"></h2>
       <div class="dialog-body" id="dialogBody"></div>
       <div class="dialog-actions">
-        <button type="button" class="btn ghost" id="dialogCancel" data-i18n="cancel"></button>
-        <button type="submit" class="btn primary" id="dialogOk"></button>
+        <button type="button" class="btn text state" id="dialogCancel" data-i18n="cancel"></button>
+        <button type="submit" class="btn text state" id="dialogOk"></button>
       </div>
     </form>
   </dialog>

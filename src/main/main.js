@@ -1,7 +1,7 @@
 'use strict';
 // Processo principal do IdleHub: janela, atalhos, IPC e ligacao com a politica dos paineis.
 const electron = require('electron');
-const { app, BrowserWindow, ipcMain, session, shell, Menu } = electron;
+const { app, BrowserWindow, ipcMain, session, shell, Menu, nativeTheme } = electron;
 const fs = require('node:fs');
 const path = require('node:path');
 const { Store, partitionOf, accountOfPartition, langFromLocale } = require('./store');
@@ -65,6 +65,7 @@ expose('state:load', () => ({ state: store.state, catalog, version: app.getVersi
 expose('state:save', (next) => {
   const saved = store.save(next);
   setPanelLanguage(saved.prefs.lang);
+  applyMode(saved.prefs.mode);
   return saved;
 });
 expose('account:clear', async (accountId) => {
@@ -106,6 +107,10 @@ function installShortcuts() {
 }
 
 // ---------- janela ----------
+// Aparencia escolhida no app vale tambem para os jogos (prefers-color-scheme dentro dos paineis).
+const THEME_SOURCE = { sistema: 'system', claro: 'light', escuro: 'dark' };
+function applyMode(mode) { nativeTheme.themeSource = THEME_SOURCE[mode] || 'system'; }
+
 function openMainWindow() {
   mainWindow = new BrowserWindow({
     title: 'IdleHub',
@@ -114,7 +119,8 @@ function openMainWindow() {
     minWidth: 900,
     minHeight: 560,
     show: false,
-    backgroundColor: '#121417',
+    // cor de fundo antes da interface carregar (surface do M3), para nao piscar no modo errado
+    backgroundColor: nativeTheme.shouldUseDarkColors ? '#131412' : '#fcf9f5',
     autoHideMenuBar: true,
     webPreferences: {
       preload: PRELOAD,
@@ -184,6 +190,7 @@ app.whenReady().then(() => {
   // Primeira abertura: idioma do sistema.
   if (!store.state.prefs.lang) store.save({ ...store.state, prefs: { ...store.state.prefs, lang: langFromLocale(app.getLocale()) } });
   setPanelLanguage(store.state.prefs.lang);
+  applyMode(store.state.prefs.mode);
   installShortcuts();
   openMainWindow();
 });

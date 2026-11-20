@@ -9,6 +9,7 @@ const ASPECTS = Object.freeze(['livre', '16:9', '4:3', '3:2', '9:16']);
 const LAYOUTS = Object.freeze(['grade', 'destaque']);
 const THEMES = Object.freeze(['grafite', 'aurora', 'oceano', 'areia', 'papel']);
 const LANGS = Object.freeze(['pt-BR', 'en', 'es']);
+const MODES = Object.freeze(['sistema', 'claro', 'escuro']);
 
 // Idioma inicial a partir do idioma do sistema (ex.: 'pt-BR', 'es-419', 'en-US').
 const langFromLocale = (locale) => {
@@ -33,7 +34,7 @@ function cleanUrl(raw) {
 }
 
 function emptyState() {
-  return { version: 1, games: [], accounts: [], prefs: { theme: 'grafite', lang: null, drawer: true, muted: false, activeGame: null } };
+  return { version: 1, games: [], accounts: [], prefs: { theme: 'grafite', mode: 'sistema', lang: null, drawer: true, muted: false, activeGame: null } };
 }
 
 // Recebe qualquer coisa e devolve um estado valido; o que nao passa e descartado em silencio.
@@ -76,6 +77,7 @@ function normalize(input) {
 
   const p = src.prefs && typeof src.prefs === 'object' ? src.prefs : {};
   out.prefs.theme = pick(p.theme, THEMES, 'grafite');
+  out.prefs.mode = pick(p.mode, MODES, 'sistema');
   out.prefs.lang = pick(p.lang, LANGS, null); // null = ainda nao escolhido (o processo principal usa o idioma do sistema)
   out.prefs.drawer = p.drawer !== false;
   out.prefs.muted = p.muted === true;
@@ -113,4 +115,4 @@ class Store {
   game(id) { return this.state.games.find((g) => g.id === id) || null; }
 }
 
-module.exports = { Store, normalize, cleanUrl, emptyState, partitionOf, accountOfPartition, langFromLocale, LIMITS, ASPECTS, LAYOUTS, THEMES, LANGS, ZOOM, SPLIT };
+module.exports = { Store, normalize, cleanUrl, emptyState, partitionOf, accountOfPartition, langFromLocale, LIMITS, ASPECTS, LAYOUTS, THEMES, LANGS, MODES, ZOOM, SPLIT };

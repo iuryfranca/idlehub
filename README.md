@@ -15,6 +15,7 @@ O IdleHub **não coleta, não envia e não retém** nenhuma informação pessoal
 
 - **Sem servidor e sem conta.** O app não tem backend, cadastro, login próprio nem plano pago.
 - **Sem telemetria.** Não há analytics, rastreamento, relatório de erros enviado pela internet nem atualização automática.
+- **Nada é baixado da internet pelo app**: a fonte (Roboto Flex) e as cores vêm dentro dele, sem Google Fonts ou CDN.
 - **O app não faz requisições próprias.** As únicas conexões são as páginas dos jogos que *você* adiciona e abre.
   Links externos só abrem no seu navegador quando você clica.
 - **Tudo fica no seu computador**, na pasta `%APPDATA%\idlehub`:
@@ -61,7 +62,9 @@ npm start              # ou dois cliques em "Abrir IdleHub.bat"
 | Som | Mudo geral (Ctrl+M) e por conta |
 | Tela cheia | F11 |
 | Lateral recolhível | Ctrl+B |
-| Temas | Grafite, Aurora, Oceano, Areia, Papel (salvos localmente) |
+| Visual Material 3 | Interface inspirada no [Material Design 3](https://m3.material.io/): navigation drawer que vira navigation rail, FAB, segmented buttons, chips, diálogos e snackbar; fonte Roboto Flex empacotada no app |
+| Temas | Grafite, Aurora, Oceano, Areia, Papel: cada um é uma cor base, e o algoritmo oficial do M3 gera a paleta completa |
+| Aparência | Seguir o sistema, Claro ou Escuro. Vale também para os jogos que têm modo claro/escuro |
 | Idioma | Seletor na lateral: Português (Brasil), English, Español. Na primeira abertura, segue o idioma do Windows. Os jogos recebem o mesmo idioma (cabeçalho `Accept-Language`) e o usam ao recarregar, se tiverem tradução |
 | Jogos continuam rodando | Trocar de jogo só esconde os painéis; nada é recarregado |
 
@@ -82,7 +85,7 @@ zero, com outro objetivo e outra interface. Nenhum código do PokeGrid foi copia
 | **Ferramentas do jogo** | Calculadora de IV, tier list, "onde caçar", incubadoras, histórico de shiny/capturas | Nenhuma por enquanto (o foco é a base genérica) |
 | **Avisos** | Notificações do Windows e webhook do Discord (shiny, conta caiu, sem pokébola) | Nenhum: o app não envia nada para lugar nenhum |
 | **Sistema** | Bandeja, iniciar com o Windows, manter o PC acordado, log de erros, backup | Não tem; app mais simples |
-| **Interface** | Uma página única (≈5.800 linhas de HTML) | Interface própria, em módulos: layout como cálculo puro e testado, ícones e temas próprios |
+| **Interface** | Uma página única (≈5.800 linhas de HTML), visual próprio | Inspirada no Material Design 3: tokens de cor/tipografia/forma, paletas geradas pelo algoritmo do M3, claro e escuro, em módulos |
 | **Idiomas** | Português, inglês e espanhol | Português, inglês e espanhol (dicionário com teste que garante as mesmas chaves nos três) |
 | **Rede** | Só o jogo e, se você configurar, o webhook do Discord | Só os jogos que você abre (verificado com log de rede, ver Privacidade) |
 | **Testes** | Testes de regressão por versão | Testes unitários de estado, layout, idioma e User-Agent, mais testes de interface automatizados |
@@ -107,7 +110,9 @@ src/main/store.js       estado + validação (tudo que vem da interface passa po
 src/main/catalog.js     sugestões de jogos
 src/preload.js          ponte mínima (window.hub)
 src/renderer/           interface: index.html, styles.css, app.js, layout.js (cálculo puro), icons.js, i18n.js (traduções)
-test/                   testes de store, layout, idioma e user-agent (node --test)
+src/renderer/m3/        tokens do Material 3 (tokens.css), cores geradas (colors.css) e a fonte Roboto Flex
+scripts/build-theme.mjs gera colors.css a partir das cores base (npm run theme)
+test/                   testes de store, layout, idioma, user-agent e contraste das cores (node --test)
 ```
 
 ## Testes
@@ -121,8 +126,24 @@ Em desenvolvimento, algumas variáveis ajudam nos testes. Nenhuma delas funciona
 - `IDLEHUB_SMOKE=arquivo.png` tira um print e fecha o app;
 - `IDLEHUB_SMOKE_JS` roda um script na interface antes do print.
 
+## Material Design 3
+
+O visual segue o [Material Design 3](https://m3.material.io/), implementado em CSS próprio (sem `@material/web`,
+que o Google colocou em modo de manutenção):
+
+- **Cores:** cada tema tem uma cor base. O script `scripts/build-theme.mjs` usa o algoritmo oficial
+  ([`@material/material-color-utilities`](https://github.com/material-foundation/material-color-utilities)) para gerar as
+  funções de cor do M3 (`primary`, `surface-container`, `on-surface`…), em claro e escuro. O resultado é um CSS estático,
+  então o app não carrega a biblioteca. Para mudar uma cor base, edite o script e rode `npm run theme`.
+- **Tipografia, cantos, elevação e movimento:** tokens do M3 em `src/renderer/m3/tokens.css`.
+- **Acessibilidade:** um teste confere o contraste WCAG de todos os pares de texto/ícone nos 10 esquemas
+  (≥ 4,5:1 para texto e ≥ 3:1 para elementos gráficos).
+- **Referência:** a especificação foi consultada pela skill
+  [material-3-skill](https://github.com/hamen/material-3-skill) (MIT), usada também para a auditoria de conformidade.
+
 ## Créditos e licença
 
 - **Inspiração:** a ideia veio do [PokeGrid-source](https://github.com/soufoka/PokeGrid-source). Nenhum código dele foi copiado (detalhes em [NOTICE.md](NOTICE.md)).
 - **Aviso:** o IdleHub não tem afiliação com nenhum dos jogos do catálogo, e cada jogo tem as próprias regras sobre o uso de várias contas.
+- **Fonte:** [Roboto Flex](https://github.com/googlefonts/roboto-flex), sob a SIL Open Font License 1.1 (`src/renderer/m3/fonts/OFL.txt`).
 - **Licença:** [MIT](LICENSE).

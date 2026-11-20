@@ -7,6 +7,11 @@ nem com o IdleBoard, nem com o PokeGrid.
   [PokeGrid-source](https://github.com/soufoka/PokeGrid-source) (MIT, © 2026 soufoka). Nenhum código dele foi
   copiado: a comparação automática (trechos de 12+ tokens iguais) só encontra chamadas padrão da API do Electron.
 - **Electron** (MIT) e Chromium: licenças distribuídas junto com o binário do Electron.
+- **Roboto Flex** (SIL Open Font License 1.1, © The Roboto Flex Project Authors): fonte empacotada em
+  `src/renderer/m3/fonts/`, com a licença em `OFL.txt`.
+- **Material Design 3** (Google): o visual segue a especificação pública do M3. As paletas são geradas, durante o
+  desenvolvimento, com `@material/material-color-utilities` (Apache 2.0); a biblioteca não vai junto com o app.
+- **material-3-skill** (MIT, Ivan Morgillo): usada como referência da especificação e para a auditoria.
 
 A interface (layout, ícones, temas, textos) é própria. Os nomes e links dos jogos no catálogo de sugestões
 pertencem aos respectivos donos, e cada jogo tem as próprias regras sobre o uso de várias contas.

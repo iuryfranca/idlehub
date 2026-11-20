@@ -73,3 +73,9 @@ test('Store grava de forma atomica e preserva arquivo corrompido', () => {
   assert.ok(fs.readdirSync(dir).some((f) => f.includes('corrompido')));
   fs.rmSync(dir, { recursive: true, force: true });
 });
+
+test('modo de aparencia: padrao segue o sistema e valores invalidos sao descartados', () => {
+  assert.equal(normalize({}).prefs.mode, 'sistema');
+  assert.equal(normalize({ prefs: { mode: 'escuro' } }).prefs.mode, 'escuro');
+  assert.equal(normalize({ prefs: { mode: 'roxo' } }).prefs.mode, 'sistema');
+});

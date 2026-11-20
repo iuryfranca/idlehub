@@ -2,7 +2,13 @@
 // Icones proprios em SVG (traco simples, 20x20). Montados com createElementNS: sem innerHTML.
 (function () {
   const P = {
-    sidebar: ['M3 4h14v12H3z', 'M8 4v12'],
+    menu: ['M3.5 6h13', 'M3.5 10h13', 'M3.5 14h13'],
+    plus: ['M10 4.5v11', 'M4.5 10h11'],
+    minus: ['M4.5 10h11'],
+    check: ['M4.5 10.5l3.5 3.5 7.5-8'],
+    sun: ['M10 7a3 3 0 1 0 0 6a3 3 0 1 0 0-6', 'M10 2.5v1.5', 'M10 16v1.5', 'M2.5 10H4', 'M16 10h1.5', 'M4.7 4.7l1 1', 'M14.3 14.3l1 1', 'M4.7 15.3l1-1', 'M14.3 5.7l1-1'],
+    moon: ['M15.5 12.5A6 6 0 0 1 7.5 4.5a6 6 0 1 0 8 8z'],
+    auto: ['M10 3.5a6.5 6.5 0 1 0 0 13z', 'M10 3.5a6.5 6.5 0 0 1 0 13'],
     sound: ['M4 8h3l4-3v10l-4-3H4z', 'M14 7.5a3.5 3.5 0 0 1 0 5', 'M15.8 5.5a6 6 0 0 1 0 9'],
     mute: ['M4 8h3l4-3v10l-4-3H4z', 'M14 8l4 4', 'M18 8l-4 4'],
     expand: ['M4 8V4h4', 'M16 8V4h-4', 'M4 12v4h4', 'M16 12v4h-4'],
