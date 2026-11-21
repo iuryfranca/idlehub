@@ -313,7 +313,7 @@ export function Features() {
     <ReplayScope id="recursos">
     <section id="recursos" className="relative mx-auto max-w-6xl scroll-mt-24 px-4 py-24">
       <SectionHead kicker={t('featKicker')} title={t('featTitle')} sub={t('featSub')} />
-      <div className="grid gap-4 md:grid-cols-6">
+      <div className="grid gap-4 md:grid-cols-6 [&>*]:min-w-0">
         <Reveal className="md:col-span-4 md:row-span-2"><Card className="h-full"><CardHead icon={<Layers className="size-5" />} title={t('mixTitle')} text={t('mixText')} /><MixDemo /></Card></Reveal>
         <Reveal className="md:col-span-2" delay={0.05}><Card className="h-full"><CardHead icon={<Lock className="size-5" />} title={t('sessTitle')} text={t('sessText')} /><SessionsDemo /></Card></Reveal>
         <Reveal className="md:col-span-2" delay={0.1}><Card className="h-full"><CardHead icon={<Activity className="size-5" />} title={t('monTitle')} text={t('monText')} /><MonitorDemo /></Card></Reveal>

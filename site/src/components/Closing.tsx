@@ -38,7 +38,7 @@ function PrivacyBody({ items }: { items: string[] }) {
       <div aria-hidden className="dots absolute inset-0 [mask-image:radial-gradient(ellipse_at_center,black,transparent_70%)]" />
       <div className="relative mx-auto max-w-6xl px-4">
         <SectionHead kicker={t('privKicker')} title={t('privTitle')} sub={t('privText')} />
-        <div className="grid gap-4 md:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-4 [&>*]:min-w-0">
           {[[0, '', t('privServers')], [0, '', t('privTrackers')], [0, '', t('privAds')], [100, '%', t('privOpen')]].map(([n, s, label], i) => (
             <Reveal key={label as string} delay={i * 0.06}>
               <div className="rounded-xl border border-outline-variant/60 bg-s1 p-6 text-center">
@@ -75,7 +75,7 @@ function CopyBlock() {
     try { await navigator.clipboard.writeText(CLONE); setDone(true); setTimeout(() => setDone(false), 1800); } catch { /* sem permissao */ }
   };
   return (
-    <div className="relative mt-auto rounded-2xl bg-s0 p-4 pt-12 font-mono text-[12.5px] leading-6 text-on-surface">
+    <div className="relative mt-auto w-full min-w-0 rounded-2xl bg-s0 p-4 pt-12 font-mono text-[12.5px] leading-6 text-on-surface">
       <div className="no-scrollbar overflow-x-auto whitespace-pre">{CLONE.split('\n').map((l) => <div key={l}><span className="select-none text-on-surface-variant">$ </span>{l}</div>)}</div>
       <button onClick={copy} className="state absolute right-3 top-3 flex items-center gap-1.5 rounded-full border border-outline-variant px-3 py-1.5 font-sans text-xs text-on-surface">
         {done ? <Check className="size-3.5 text-[#76daa1]" /> : <Copy className="size-3.5" />}{done ? t('copied') : t('copy')}
@@ -93,7 +93,8 @@ function DownloadBody() {
   return (
     <section id="baixar" className="relative mx-auto max-w-6xl scroll-mt-24 px-4 py-24">
       <SectionHead kicker={t('dlKicker')} title={t('dlTitle')} />
-      <div className="grid gap-4 md:grid-cols-5">
+      {/* [&>*]:min-w-0: itens da grade podem encolher (senao o bloco de codigo alarga a pagina no celular) */}
+      <div className="grid gap-4 md:grid-cols-5 [&>*]:min-w-0">
         <Reveal className="md:col-span-3 md:row-span-2">
           <div className="relative h-full overflow-hidden rounded-xl bg-primary-container p-8 text-on-primary-container">
             <div aria-hidden className="absolute -right-24 -top-24 size-72 rounded-full bg-primary/25 blur-3xl" />

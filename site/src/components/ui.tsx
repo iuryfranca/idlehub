@@ -67,7 +67,7 @@ export function Card({ children, className = '' }: { children: ReactNode; classN
         className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
         style={{ background: 'radial-gradient(420px circle at var(--mx) var(--my), color-mix(in srgb, var(--md-primary) 12%, transparent), transparent 60%)' }}
       />
-      <div className="relative flex h-full flex-col">{children}</div>
+      <div className="relative flex h-full min-w-0 flex-col">{children}</div>
     </div>
   );
 }
