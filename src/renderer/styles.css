@@ -54,6 +54,8 @@ button, input, select { font: inherit; color: inherit; letter-spacing: inherit; 
   border-radius: 0 var(--md-sys-shape-corner-large) var(--md-sys-shape-corner-large) 0;
   padding: var(--space-3) var(--space-3) var(--space-4);
 }
+/* janela baixa: a lateral rola em vez de espremer os itens (botao sumia, rotulos sobrepostos) */
+.drawer > * { flex-shrink: 0; }
 .drawer-head { display: flex; align-items: center; gap: var(--space-1); min-height: 56px; padding: 0 var(--space-1); }
 .brand-name { font: var(--md-sys-typescale-title-large); color: var(--md-sys-color-on-surface); white-space: nowrap; }
 
