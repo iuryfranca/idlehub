@@ -41,6 +41,9 @@ Como o código é aberto, qualquer pessoa pode repetir essa verificação.
 
 ## Baixar e abrir
 
+**Microsoft Store (recomendado, Windows 10/11):** [IdleHub na Microsoft Store](https://apps.microsoft.com/detail/9PLXW446BSRK).
+Instala sem o aviso do SmartScreen e se atualiza pela Store.
+
 **Instalador (Windows 10/11, 64 bits):** baixe o `IdleHub-Setup-<versão>.exe` na
 [página de Releases](https://github.com/iuryfranca/idlehub/releases/latest) e abra. A instalação é só para o seu
 usuário (não pede administrador) e cria atalhos na área de trabalho e no menu Iniciar.

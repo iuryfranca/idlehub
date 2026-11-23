@@ -1,10 +1,11 @@
 import { motion, useReducedMotion, useScroll, useSpring, useTransform } from 'motion/react';
-import { ArrowRight, Download, Layers, Moon, Cpu } from 'lucide-react';
+import { ArrowRight, Layers, Moon, Cpu } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useI18n } from '../i18n';
-import { DOWNLOAD, RELEASES, REPO } from '../links';
+import { RELEASES, REPO } from '../links';
 import { AppMock } from './AppMock';
 import { PixelSky } from './PixelSky';
+import { StoreBadge } from './StoreBadge';
 import { Github, WindowsGlyph } from './ui';
 
 const EASE = [0.05, 0.7, 0.1, 1] as const;
@@ -98,14 +99,12 @@ export function Hero() {
 
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.75, ease: EASE }}
           className="mt-9 flex flex-wrap items-center justify-center gap-3">
-          <a href={DOWNLOAD} className="state group inline-flex h-14 items-center gap-3 rounded-full bg-primary px-7 text-base font-medium text-on-primary shadow-lg shadow-primary/25 transition-transform hover:-translate-y-0.5 active:scale-[.98]">
-            <WindowsGlyph className="size-4" /> {t('ctaDownload')} <Download className="size-4 transition-transform group-hover:translate-y-0.5" />
-          </a>
+          <StoreBadge />
           <a href={REPO} className="state inline-flex h-14 items-center gap-3 rounded-full border border-outline-variant bg-s1/60 px-7 text-base font-medium text-on-surface backdrop-blur transition-transform hover:-translate-y-0.5 active:scale-[.98]">
             <Github className="size-4" /> {t('ctaCode')}
           </a>
         </motion.div>
-        <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }} className="mt-5 font-mono text-xs tracking-wide text-on-surface-variant">{t('heroMeta')}</motion.p>
+        <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }} className="mt-5 flex items-center justify-center gap-2 font-mono text-xs tracking-wide text-on-surface-variant"><WindowsGlyph className="size-3.5 shrink-0" />{t('heroMeta')}</motion.p>
       </div>
 
       <div className="relative mx-auto mt-16 max-w-[1360px] px-4 [perspective:1800px] lg:px-10">

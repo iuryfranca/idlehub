@@ -1,8 +1,9 @@
 import { animate, motion, useInView } from 'motion/react';
-import { ArrowRight, Check, Copy, Download, ShieldCheck, Store, Terminal } from 'lucide-react';
+import { ArrowRight, Check, Copy, Download, ShieldCheck, Terminal } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useI18n } from '../i18n';
-import { CLONE, DOWNLOAD, ISSUES, RELEASES, REPO, STORE, STORE_LIVE, base } from '../links';
+import { CLONE, DOWNLOAD, ISSUES, RELEASES, REPO, base } from '../links';
+import { StoreBadge } from './StoreBadge';
 import { Card, Github, Mark, ReplayScope, Reveal, SectionHead, WindowsGlyph, useReplayTick } from './ui';
 
 function CountUp({ to, suffix = '' }: { to: number; suffix?: string }) {
@@ -99,26 +100,21 @@ function DownloadBody() {
           <div className="relative h-full overflow-hidden rounded-xl bg-primary-container p-8 text-on-primary-container">
             <div aria-hidden className="absolute -right-24 -top-24 size-72 rounded-full bg-primary/25 blur-3xl" />
             <span className="grid size-12 place-items-center rounded-2xl bg-primary text-on-primary"><WindowsGlyph className="size-5" /></span>
-            <h3 className="mt-6 text-3xl font-semibold tracking-tight">{t('dlWinTitle')}</h3>
-            <p className="mt-2 max-w-md opacity-85">{t('dlWinText')}</p>
-            <a href={DOWNLOAD} className="state group mt-8 inline-flex h-14 items-center gap-3 rounded-full bg-primary px-7 font-medium text-on-primary shadow-lg shadow-primary/30 transition-transform hover:-translate-y-0.5 active:scale-[.98]">
-              <Download className="size-5 transition-transform group-hover:translate-y-0.5" />{t('dlWinBtn')}
-            </a>
-            <p className="mt-6 max-w-md text-sm opacity-75">{t('dlWinNote')}</p>
+            <h3 className="mt-6 text-3xl font-semibold tracking-tight">{t('dlStoreTitle')}</h3>
+            <p className="mt-2 max-w-md opacity-85">{t('dlStoreText')}</p>
+            <StoreBadge className="mt-8" />
             <div className="mt-8 flex flex-wrap gap-2 font-mono text-xs">
-              {['v0.1.0', 'Windows x64', '~109 MB', 'MIT', 'SHA-256 ✓'].map((c) => <span key={c} className="rounded-full border border-on-primary-container/25 px-3 py-1">{c}</span>)}
+              {['Windows 10/11', 'x64', t('dlFree'), 'MIT'].map((c) => <span key={c} className="rounded-full border border-on-primary-container/25 px-3 py-1">{c}</span>)}
             </div>
           </div>
         </Reveal>
         <Reveal className="md:col-span-2" delay={0.06}>
           <Card className="h-full">
-            <div className="flex items-start justify-between">
-              <span className="grid size-10 place-items-center rounded-2xl bg-secondary-container text-on-secondary-container"><Store className="size-5" /></span>
-              {!STORE_LIVE && <span className="rounded-full bg-tertiary-container px-3 py-1 text-xs font-medium text-on-tertiary-container">{t('dlStoreBadge')}</span>}
-            </div>
-            <h3 className="mt-4 text-xl font-semibold text-on-surface">{t('dlStoreTitle')}</h3>
-            <p className="mt-1 text-on-surface-variant">{t('dlStoreText')}</p>
-            {STORE_LIVE && <a href={STORE} className="mt-4 inline-flex items-center gap-2 text-primary">apps.microsoft.com <ArrowRight className="size-4" /></a>}
+            <span className="grid size-10 place-items-center rounded-2xl bg-secondary-container text-on-secondary-container"><Download className="size-5" /></span>
+            <h3 className="mt-4 text-xl font-semibold text-on-surface">{t('dlExeTitle')}</h3>
+            <p className="mt-1 text-on-surface-variant">{t('dlExeText')}</p>
+            <p className="mt-2 text-sm text-on-surface-variant opacity-80">{t('dlExeNote')}</p>
+            <a href={DOWNLOAD} className="mt-4 inline-flex items-center gap-2 text-primary">{t('dlExeBtn')} <ArrowRight className="size-4" /></a>
           </Card>
         </Reveal>
         <Reveal className="md:col-span-2" delay={0.12}>
